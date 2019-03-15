@@ -1,0 +1,3 @@
+pandas==0.24.1
+pcaspy==0.7.1
+pyepics==3.3.3
