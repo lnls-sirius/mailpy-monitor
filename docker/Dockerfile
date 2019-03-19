@@ -1,5 +1,5 @@
 # use an official Python runtime as a parent image
-FROM python:3
+FROM itorafael/epics-base:r3.15.6
 
 MAINTAINER Rafael Ito <rafael.ito@lnls.br>
 USER root
@@ -7,17 +7,19 @@ USER root
 # set the working directory to /app
 WORKDIR /app
 
-# copy the current directory contens into the container at /app
-COPY . /app
+# copy the necessary files into the container at /app
+COPY ../sms.py /app
+COPY ../sms_table.csv /app
 
 # define environment variables
-ENV EPICS_BASE /opt/epics-R3.15.6/base
-ENV EPICS_HOST_ARCH linux-x86_64
+#ENV 
 
-# install EPICS base
-RUN apt-get -y update
-RUN apt-get install -y swig
-RUN build/setup-epics.sh
+# install prerequisites
+RUN apt-get update -y
+RUN apt-get install -y \
+    swig \
+    python3 \
+    python3-pip
 
 # install needed packages specified in requirements.txt
 RUN pip3 install -r requirements.txt
