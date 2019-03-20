@@ -521,6 +521,7 @@ def thread_2():
                             pass
             #---------------------------------------
             time.sleep(1)
+            # clean to the end of line
             sys.stdout.write("\033[K")
             print("standby", end='\r')
         # waits mailing service to be enabled
