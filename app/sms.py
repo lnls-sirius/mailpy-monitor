@@ -596,9 +596,7 @@ def thread_2():
                 # clean to the end of line
                 sys.stdout.write("\033[K")
                 print("standby", end='\r')
-            # waits mailing service to be enabled
-            print("Mail server DISABLED", end='\r')
-            time.sleep(1)
+
     # log if an exception is raised:
     except Exception as e:
         logger.error(str(e))

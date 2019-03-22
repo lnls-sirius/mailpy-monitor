@@ -25,7 +25,7 @@ EXPOSE 465
 EXPOSE 587
 
 # define environment variables
-ENV EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST localhost"
+#ENV EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST localhost"
 ARG CONS2_SMS_PASSWD
 
 # copy necessary files to container
