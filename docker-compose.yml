@@ -2,7 +2,8 @@ version: '3.7'
 services:
   sms:
     hostname: cons2-sms
-    image: itorafael/cons2-sms:v0.3
+    image: lnlscon/notification:2019-03-22
+    #image: itorafael/cons2-sms:v0.3
     #image: cons2-sms
     #ports:
     #  - "465"
