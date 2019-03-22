@@ -7,8 +7,8 @@ services:
     ports:
       - "465"
       - "587"
-#    networks:
-#      hostnet: {}
+    networks:
+      hostnet: {}
     dns:
       - 10.0.0.71
       - 10.0.0.72
@@ -27,8 +27,8 @@ services:
         max-size: "10m"
         max-file: "10"
 
-#networks:
-#  hostnet:
-#    external: true
-#    name: host
+networks:
+  hostnet:
+    external: true
+    name: host
   
