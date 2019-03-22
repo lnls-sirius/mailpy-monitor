@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+  sms:
+    hostname: cons2-sms
+    image: itorafael/cons2-sms:v0.3
+    #image: cons2-sms
+    ports:
+      - "465"
+      - "587"
+#    networks:
+#      hostnet: {}
+    dns:
+      - 10.0.0.71
+      - 10.0.0.72
+    environment:
+      - CONS2_SMS_PASSWD=${CONS2_SMS_PASSWD}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+#networks:
+#  hostnet:
+#    external: true
+#    name: host
+  

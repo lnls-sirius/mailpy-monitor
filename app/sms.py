@@ -60,10 +60,12 @@ import pandas as pd
 #---------------------------------------
 # EPICS libraries
 from pcaspy import Driver, SimpleServer
-from epics import caget, caput, camonitor
+#from epics import caget, caput, camonitor
+from epics import caget
 #---------------------------------------
 # log libraries
 import logging
+from logging.handlers import RotatingFileHandler
 import traceback
 #---------------------------------------
 # mailing libraries
@@ -336,6 +338,9 @@ def thread_1():
 # create logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+# the next section was used when dealing with handler "FileHandler"
+'''
 # create file handler and set level to debug
 fh = logging.FileHandler('sms.log')
 fh.setLevel(logging.DEBUG)
@@ -345,6 +350,18 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s:%(message)s', datefmt='
 fh.setFormatter(formatter)
 # add fh to logger
 logger.addHandler(fh)
+'''
+
+# for handler "RotatingFileHandler", used the above
+# create file handler and set level to debug
+rfh = RotatingFileHandler("sms.log", maxBytes=10000, backupCount=5)
+# create formatter
+formatter = logging.Formatter('%(asctime)s %(levelname)s:%(message)s', datefmt='%Y-%b-%d %H:%M:%S')
+# add formatter to rfh
+rfh.setFormatter(formatter)
+# add rfh to logger
+logger.addHandler(rfh)
+
 #==============================================================================
 # main loop: check if PVs and email targets if not in specified range
 #==============================================================================
@@ -464,8 +481,13 @@ def thread_2():
         # main loop
         #=======================================
         while(True):
+            # if service is disabled, log and wait until it is enabled
+            if (caget("CON:MailServer:Enable") == 0):
+                logger.warning('SMS is disabled (PV "CON:MailServer:Enable" is zero)')
+                while(caget("CON:MailServer:Enable") == 0):
+                    time.sleep(1)
             # only check PVs if service is enable
-            while caget("CON:MailServer:Enable"):
+            else:
                 #---------------------------------------
                 '''
                 # the next section was used when a single TIMEOUT was used for all PVs monitored
