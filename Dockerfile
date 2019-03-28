@@ -1,4 +1,4 @@
-# use an official Python runtime as a parent image
+# use an unofficial image with EPICS base (Debian 9) as a parent image
 FROM itorafael/epics-base:r3.15.6
 
 LABEL maintainer="Rafael Ito <rafael.ito@lnls.br>"
@@ -10,8 +10,7 @@ WORKDIR /app
 # copy the "requirements.txt" file to container
 COPY requirements.txt /app
 # install prerequisites
-RUN apt-get update -y
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     swig \
     python3 \
     python3-pip
@@ -27,6 +26,10 @@ EXPOSE 587
 # define environment variables
 #ENV EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST localhost"
 ARG CONS2_SMS_PASSWD
+
+# set correct timezone
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # copy necessary files to container
 COPY app/sms.py /app

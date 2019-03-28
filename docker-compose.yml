@@ -16,9 +16,9 @@ services:
     environment:
       - CONS2_SMS_PASSWD=${CONS2_SMS_PASSWD}
     deploy:
-      placement:
-        constraints:
-          - node.hostname == LA-RaCtrl-CO-Srv-1
+    #  placement:
+    #    constraints:
+    #      - node.hostname == LA-RaCtrl-CO-Srv-1
       replicas: 1
       restart_policy:
         condition: on-failure
@@ -32,4 +32,3 @@ networks:
   hostnet:
     external: true
     name: host
-  
