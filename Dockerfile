@@ -33,7 +33,7 @@ EXPOSE 587
 # Environment Variables
 #================================================
 #ENV EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST localhost"
-ARG CONS2_SMS_PASSWD
+#ARG CONS2_SMS_PASSWD
 
 #================================================
 # start the container
@@ -41,4 +41,4 @@ ARG CONS2_SMS_PASSWD
 WORKDIR /app
 COPY app/sms.py /app
 COPY app/sms_table.csv /app
-CMD python3 sms.py -p ${CONS2_SMS_PASSWD}
+CMD python3 sms.py -p $(cat /run/secrets/CONS2_SMS_PASSWD)

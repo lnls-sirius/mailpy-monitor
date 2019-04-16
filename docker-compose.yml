@@ -1,7 +1,6 @@
 version: '3.7'
 services:
   sms:
-    hostname: cons2-sms
     image: lnlscon/notification
     #ports:
     #  - "465"
@@ -11,20 +10,26 @@ services:
     dns:
       - 10.0.0.71
       - 10.0.0.72
-    environment:
-      - CONS2_SMS_PASSWD=${CONS2_SMS_PASSWD}
+    #environment:
+    #  - CONS2_SMS_PASSWD=${CONS2_SMS_PASSWD}
     deploy:
-      placement:
-        constraints:
-          - node.hostname == LA-RaCtrl-CO-Srv-1
+     placement:
+       constraints:
+         - node.hostname == CA-RaCtrl-CO-Srv-1
       replicas: 1
       restart_policy:
         condition: on-failure
+    secrets:
+      - CONS2_SMS_PASSWD
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "10"
+
+secrets:
+  CONS2_SMS_PASSWD:
+    external: true
 
 networks:
   hostnet:
