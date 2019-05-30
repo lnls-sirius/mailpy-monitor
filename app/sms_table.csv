@@ -23,3 +23,5 @@ ID,emails,PV,condition,specified value,measurement unit,email subject,warning me
 22,fernando.bacchim@lnls.br;rafael.ito@lnls.br,RAD:Thermo1:TotalDoseRate:Dose-T,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µS,Thermo 10 Total Dose Rate Warning,Warning: Thermo 10 total dose rate exceeded its limits!,0,SMS:RAD:Enable
 23,fernando.bacchim@lnls.br;rafael.ito@lnls.br,RAD:Thermo4:TotalDoseRate:Dose-T,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µS,Thermo 4 Total Dose Rate Warning,Warning: Thermo 4 total dose rate exceeded its limits!,0,SMS:RAD:Enable
 24,fernando.bacchim@lnls.br;rafael.ito@lnls.br,RAD:Thermo2:TotalDoseRate:Dose-T,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µS,Thermo 2 Total Dose Rate Warning,Warning: Thermo 2 total dose rate exceeded its limits!,0,SMS:RAD:Enable
+25,robert.polli@lnls.br,UPS:BAT:01,superior than,1,,UPS on Battery,Warning: Connectivity Room UPS is on battery!,1800,SMS:BAT:01:Enable
+26,robert.polli@lnls.br,UPS:NIVEL:01,superior than,1,,UPS – Low Battery,Warning: Connectivity Room UPS is with low battery!,1800,SMS:NIVEL:01:Enable
