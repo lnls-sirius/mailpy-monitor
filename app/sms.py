@@ -516,7 +516,7 @@ def thread_2():
                                     last_event_time[i] = time.time()
                             # check if PV value exceeded its specified value
                             elif(condition[i] == 'superior than'):
-                                if(pv_value > value[i]):
+                                if(pv_value > float(value[i])):
                                     pv_str = caget(pv[i], as_string=True)
                                     specified_value = "lower than " + str(value[i]) + " " + unit[i]
                                     msg = compose_msg(pv[i], pv_str, specified_value, unit[i], warning[i], subject[i], email[i])
@@ -525,7 +525,7 @@ def thread_2():
                                     last_event_time[i] = time.time()
                             # check if PV value is lower than its specified value
                             elif(condition[i] == 'inferior than'):
-                                if(pv_value < value[i]):
+                                if(pv_value < float(value[i])):
                                     pv_str = caget(pv[i], as_string=True)
                                     specified_value = "higher than " + str(value[i]) + " " + unit[i]
                                     msg = compose_msg(pv[i], pv_str, specified_value, unit[i], warning[i], subject[i], email[i])
