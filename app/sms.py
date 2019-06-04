@@ -101,8 +101,8 @@ parser.add_argument(
     metavar='my_password',
     help='set the password used when trying to log in'
     )
-# password
 #---------------------------------------
+# table (csv file) that will be used
 parser.add_argument(
     '-t', '--table',
     metavar='my_table.csv',
@@ -452,8 +452,7 @@ def thread_2():
             value = caget(PV)
             if(value == None):
                 logger.warning('cannot connect to PV ' + str(PV))
-            else:
-                return value
+            return value
         #=======================================
         # function that writes in log
         #=======================================
