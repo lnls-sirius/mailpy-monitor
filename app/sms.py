@@ -500,8 +500,8 @@ def thread_2():
                         else:
                             # check if PV value is in specified range
                             if(condition[i] == 'out of range'):
-                                min = int(value[i].split(':')[0])
-                                max = int(value[i].split(':')[1])
+                                min = float(value[i].split(':')[0])
+                                max = float(value[i].split(':')[1])
                                 if( (pv_value < min) or (pv_value > max) ):
                                     pv_str = caget(pv[i], as_string=True)
                                     specified_value = "from " + str(min) + " " + unit[i] + " to " + str(max) + " " + unit[i]
