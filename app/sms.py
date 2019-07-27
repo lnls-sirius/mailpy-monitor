@@ -446,14 +446,6 @@ def thread_2():
                 # create dictionary for step arrays
                 step.update({i : step_array})
         #=======================================
-        # function that checks PV value
-        #=======================================
-        def check_pv(PV):
-            value = caget(PV)
-            if(value == None):
-                logger.warning('cannot connect to PV ' + str(PV))
-            return value
-        #=======================================
         # function that writes in log
         #=======================================
         def log_info(pv_name, condition, specified_value, pv_value, mailing_list):
@@ -501,8 +493,11 @@ def thread_2():
                     # check when last event happened (if happened) and compare with the correspondet PV timeout
                     # also check if monitoring service is disabled for that PV
                     if(((time.time() - last_event_time[i]) > timeout[i]) and (caget(enable[i]) == 1)):
-                        pv_value = check_pv(pv[i])
-                        if (pv_value != None):
+                        # check PV value
+                        pv_value = caget(pv[i])
+                        if(pv_value == None):
+                            logger.warning('cannot connect to PV ' + str(pv[i]))
+                        else:
                             # check if PV value is in specified range
                             if(condition[i] == 'out of range'):
                                 min = int(value[i].split(':')[0])
