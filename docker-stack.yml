@@ -1,10 +1,9 @@
 version: '3.7'
 services:
   sms:
-    image: lnlscon/notification
+    image: lnlscon/notification:2019-06-04
     volumes:
-    #  - /home/rafael/RAFAEL/git/mailpy/app:/app
-      - /storage/services/repository/mailpy/app:/app
+      - /home/con-srv/LA-disk0/misc-brick/repository/mailpy/app:/app
     #ports:
     #  - "465"
     #  - "587"
@@ -16,12 +15,12 @@ services:
     #environment:
     #  - CONS2_SMS_PASSWD=${CONS2_SMS_PASSWD}
     deploy:
+      placement:
+        constraints:
+          - node.hostname == CA-RaCtrl-CO-Srv-1
       replicas: 1
       restart_policy:
         condition: on-failure
-      placement:
-        constraints:
-          - node.hostname != TA-TiRack-CO-FWSrv-1
     secrets:
       - CONS2_SMS_PASSWD
     logging:

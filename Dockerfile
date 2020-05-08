@@ -39,6 +39,7 @@ EXPOSE 587
 # start the container
 #================================================
 WORKDIR /app
-COPY app/sms.py /app
-COPY app/sms_table.csv /app
+# mount volume instead of copying files
+#COPY app/sms.py /app
+#COPY app/sms_table.csv /app
 CMD python3 sms.py -p $(cat /run/secrets/CONS2_SMS_PASSWD)

@@ -101,8 +101,8 @@ parser.add_argument(
     metavar='my_password',
     help='set the password used when trying to log in'
     )
-# password
 #---------------------------------------
+# table (csv file) that will be used
 parser.add_argument(
     '-t', '--table',
     metavar='my_table.csv',
@@ -446,15 +446,6 @@ def thread_2():
                 # create dictionary for step arrays
                 step.update({i : step_array})
         #=======================================
-        # function that checks PV value
-        #=======================================
-        def check_pv(PV):
-            value = caget(PV)
-            if(value == None):
-                logger.warning('cannot connect to PV ' + str(PV))
-            else:
-                return value
-        #=======================================
         # function that writes in log
         #=======================================
         def log_info(pv_name, condition, specified_value, pv_value, mailing_list):
@@ -502,12 +493,15 @@ def thread_2():
                     # check when last event happened (if happened) and compare with the correspondet PV timeout
                     # also check if monitoring service is disabled for that PV
                     if(((time.time() - last_event_time[i]) > timeout[i]) and (caget(enable[i]) == 1)):
-                        pv_value = check_pv(pv[i])
-                        if (pv_value != None):
+                        # check PV value
+                        pv_value = caget(pv[i])
+                        if(pv_value == None):
+                            logger.warning('cannot connect to PV ' + str(pv[i]))
+                        else:
                             # check if PV value is in specified range
                             if(condition[i] == 'out of range'):
-                                min = int(value[i].split(':')[0])
-                                max = int(value[i].split(':')[1])
+                                min = float(value[i].split(':')[0])
+                                max = float(value[i].split(':')[1])
                                 if( (pv_value < min) or (pv_value > max) ):
                                     pv_str = caget(pv[i], as_string=True)
                                     specified_value = "from " + str(min) + " " + unit[i] + " to " + str(max) + " " + unit[i]
@@ -517,7 +511,7 @@ def thread_2():
                                     last_event_time[i] = time.time()
                             # check if PV value exceeded its specified value
                             elif(condition[i] == 'superior than'):
-                                if(pv_value > value[i]):
+                                if(pv_value > float(value[i])):
                                     pv_str = caget(pv[i], as_string=True)
                                     specified_value = "lower than " + str(value[i]) + " " + unit[i]
                                     msg = compose_msg(pv[i], pv_str, specified_value, unit[i], warning[i], subject[i], email[i])
@@ -526,7 +520,7 @@ def thread_2():
                                     last_event_time[i] = time.time()
                             # check if PV value is lower than its specified value
                             elif(condition[i] == 'inferior than'):
-                                if(pv_value < value[i]):
+                                if(pv_value < float(value[i])):
                                     pv_str = caget(pv[i], as_string=True)
                                     specified_value = "higher than " + str(value[i]) + " " + unit[i]
                                     msg = compose_msg(pv[i], pv_str, specified_value, unit[i], warning[i], subject[i], email[i])
