@@ -35,5 +35,9 @@ ID,emails,PV,condition,specified value,measurement unit,email subject,warning me
 34,fernanda.moura@lnls.br;fernando.bacchim@lnls.br;rafael.ito@lnls.br,RAD:Thermo14:TotalDoseRate:Dose,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µSv,Thermo 14 Total Dose Rate Warning,Warning: Thermo 14 total dose rate exceeded its limits!,0,SMS:RAD:Enable
 35,fernanda.moura@lnls.br;fernando.bacchim@lnls.br;rafael.ito@lnls.br,RAD:Thermo15:TotalDoseRate:Dose,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µSv,Thermo 15 Total Dose Rate Warning,Warning: Thermo 15 total dose rate exceeded its limits!,0,SMS:RAD:Enable
 36,fernanda.moura@lnls.br;fernando.bacchim@lnls.br;rafael.ito@lnls.br,RAD:Thermo16:TotalDoseRate:Dose,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µSv,Thermo 16 Total Dose Rate Warning,Warning: Thermo 16 total dose rate exceeded its limits!,0,SMS:RAD:Enable
-37,robert.polli@lnls.br;rafael.ito@lnls.br,UPS:BAT:01,superior than,0,u,UPS on Battery,Warning: Connectivity Room UPS is on battery!,1800,SMS:UPS:Enable
-38,robert.polli@lnls.br;rafael.ito@lnls.br,UPS:LEVEL:01,superior than,0,u,UPS – Low Battery,Warning: Connectivity Room UPS is with low battery!,1800,SMS:UPS:Enable
+37,robert.polli@lnls.br;rafael.ito@lnls.br,UPS:BAT:01,superior than,0,u,UPS Connectivity on Battery,Warning: Connectivity Room UPS is on battery!,1800,SMS:UPS:Enable
+38,robert.polli@lnls.br;rafael.ito@lnls.br,UPS:LEVEL:01,superior than,0,u,UPS Connectivity – Low Battery,Warning: Connectivity Room UPS is with low battery!,1800,SMS:UPS:Enable
+39,robert.polli@lnls.br,UPS:Linac01:BatCapacity-Mon,inferior than,90.0,%,UPS Linac01 on Battery,Warning: Linac Room UPS is on battery! - Rack 01,1800,SMS:UPSLinac1:Enable
+40,robert.polli@lnls.br,UPS:Linac03:BatCapacity-Mon,inferior than,90.0,%,UPS Linac03 on Battery,Warning: Linac Room UPS is on battery! - Rack 03,1800,SMS:UPSLinac3:Enable
+41,robert.polli@lnls.br,UPS:Linac01:BatCapacity-Mon,inferior than,30.0,%,UPS Linac01 – Low Battery,"Warning: Linac Room UPS is with low battery, lower than 30%! - Rack 01",600,SMS:UPSLinac1:Enable
+42,robert.polli@lnls.br,UPS:Linac03:BatCapacity-Mon,inferior than,30.0,%,UPS Linac03 – Low Battery,"Warning: Linac Room UPS is with low battery, lower than 30%! - Rack 03",600,SMS:UPSLinac3:Enable
