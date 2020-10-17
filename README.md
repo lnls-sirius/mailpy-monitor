@@ -15,6 +15,10 @@ So far, it's monitoring the following systems:
     - water temperature of Linac Accelerating Structures
     - total dose of radiation detectors (Thermo, ELSE, Berthold)
 
+Development
+-----------
+Install **pre-commit** !
+
 To do:
 ----------
 
