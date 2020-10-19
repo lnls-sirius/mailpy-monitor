@@ -3,10 +3,11 @@ import typing
 import epics
 import logging
 import queue
+import threading
 
 from . import SMS_QUEUE
 
-logger = logging.getLogger()
+logger = logging.getLogger("COMMONS")
 
 
 class Condition(object):
@@ -17,10 +18,26 @@ class Condition(object):
     DecreasingStep = "decreasing step"
 
 
+class ConfigType(object):
+    DisableSMS = 0
+    DisableGroup = 1
+
+
 class Group:
     def __init__(self, pvname: str, enabled: bool = True):
         self.pvname: str = pvname
-        self.enabled: bool = enabled
+        self._enabled: bool = enabled
+        self.lock = threading.RLock()
+
+    @property
+    def enabled(self):
+        with self.lock:
+            return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        with self.lock:
+            self.enabled = value
 
     def __str__(self):
         return f"<Group={self.pvname} enabled={self.enabled}>"
@@ -29,6 +46,27 @@ class Group:
 class EntryException(Exception):
     def __init__(self, *args):
         super().__init__(*args)
+
+
+class ConfigEvent:
+    def __init__(
+        self,
+        config_type: int,
+        value,
+        pv_name: str = None,
+        success_callback: typing.Callable[[str, int], None] = None,
+    ):
+        self.config_type = config_type
+        self.value = value
+        self.success_callback = success_callback
+        self.pv_name = pv_name
+
+    def complete_transaction(self, new_value):
+        if self.pv_name and self.success_callback:
+            self.success_callback(self.pv_name, new_value)
+
+    def __str__(self):
+        return f"<ConfigEvent={self.config_type} value={self.value}>"
 
 
 class EmailEvent:
@@ -41,6 +79,7 @@ class EmailEvent:
         emails,
         warning,
         condition,
+        value_measured,
     ):
         self.pvname = pvname
         self.specified_value_message = (
@@ -51,6 +90,7 @@ class EmailEvent:
         self.emails = emails
         self.warning = warning
         self.condition = condition
+        self.value_measured = value_measured
 
     def __str__(self):
         return f"<EmailEvent {self.pvname} {self.specified_value_message} {self.subject} {self.emails} {self.warning}>"
@@ -80,6 +120,7 @@ class Entry:
         self.email_timeout = email_timeout
         self.emails = emails
         self.group = group
+        self.lock = threading.RLock()
 
         # reset last_event_time for all PVs, so it start monitoring right away
         self.last_event_time = time.time() - self.email_timeout
@@ -178,7 +219,6 @@ class Entry:
         """
         specified_value_message: typing.Optional[str] = None
 
-        # @todo: Add this event into a processing queue, to be consumed by sms start thread
         if self.condition == Condition.OutOfRange and (
             value < self.alarm_min or value > self.alarm_max
         ):
@@ -242,20 +282,28 @@ class Entry:
                 subject=self.subject,
                 emails=self.emails,
                 condition=self.condition,
+                value_measured=str(value),
             )
             SMS_QUEUE.put(event, block=False, timeout=None)
+
+        except EntryException:
+            logger.exception(f"Invalid entry {self}")
 
         except queue.Full:
             logger.exception(
                 f"Failed to put entry in queue {self} {event}. Queue is full, something wrong is happening..."
             )
 
+    def trigger(self):
+        """ Manual trigger """
+        self.check_alarms(value=self.pv.value)
+
     def check_alarms(self, **kwargs):
         """
         Define if an alarm check should be performed. Disconnected PVs will are not checked.
-        @:return bool: Perform or not the alarm check.
+        Trigger this function as a callback and within a timer due to the sms timeout. e.g.: Callback may be ignored.
+        :return bool: Perform or not the alarm check.
         """
-        # @todo: We should trigger this function as a callback and within a timer due to the sms timeout e.g.: Callback may be ignored
         if not self.group.enabled:
             logger.info(f"Ignoring {self} due to disabled group")
             return
@@ -272,5 +320,6 @@ class Entry:
             )
             return
 
-        self.last_event_time = timestamp
-        self.handle_condition(value=kwargs["value"])
+        with self.lock:
+            self.last_event_time = timestamp
+            self.handle_condition(value=kwargs["value"])
