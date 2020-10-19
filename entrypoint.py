@@ -45,18 +45,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # SMS
-    sms = app.sms.SMSApp(
+    sms_app = app.sms.SMSApp(
         tls=args.tls, login=args.login, passwd=args.passwd, table=args.table
     )
-    sms.load_csv_table()
-    sms.start()
+    sms_app.load_csv_table()
+    sms_app.start()
 
     # EPICS
-    driver = app.ioc.SMSEpicsDriver(sms=sms)
+    driver = app.ioc.SMSEpicsDriver(sms_app=sms_app)
     server = app.ioc.SMSEpicsServer(driver=driver)
     server.start()
 
-    # Loop untill completion
-    sms.tick_thread.join()
-    sms.main_thread.join()
+    # Loop until completion
+    sms_app.tick_thread.join()
+    sms_app.main_thread.join()
     server.thread.join()

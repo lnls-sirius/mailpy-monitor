@@ -213,6 +213,8 @@ class SMSApp:
         while self.running:
             time.sleep(self.tick)
             for entry in self.entries.values():
+                if not self.running:
+                    break
                 entry.trigger()
 
     def do_main_action(self):

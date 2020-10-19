@@ -19,10 +19,10 @@ DBD_ON_OFF = {
 
 
 class SMSEpicsDriver(pcaspy.Driver):
-    def __init__(self, sms: sms.SMSApp, *args):
-        super().__init__(self, *args)
+    def __init__(self, sms_app: sms.SMSApp):
+        super().__init__()
         # @todo: Consider not passing sms.SMSApp.
-        self.sms = sms
+        self.sms_app = sms_app
         self.pvdb = {}
         self.create_pvdb()
 
@@ -33,7 +33,7 @@ class SMSEpicsDriver(pcaspy.Driver):
             "enums": ["Off", "On"],
             "value": 1,
         }
-        for pv, value in self.sms.groups.items():
+        for pv, value in self.sms_app.groups.items():
             self.pvdb[pv] = {
                 "type": "enum",
                 "enums": ["Off", "On"],
@@ -55,7 +55,7 @@ class SMSEpicsDriver(pcaspy.Driver):
                 )
                 SMS_QUEUE.put(event)
 
-            elif reason in self.groups:
+            elif reason in self.sms_app.groups:
                 event = commons.ConfigEvent(
                     config_type=commons.ConfigType.DisableGroup,
                     value=value,
