@@ -40,7 +40,7 @@ class Group:
             self.enabled = value
 
     def __str__(self):
-        return f"<Group={self.pvname} enabled={self.enabled}>"
+        return f'<Group="{self.pvname}" enabled={self.enabled}>'
 
 
 class EntryException(Exception):
@@ -192,7 +192,7 @@ class Entry:
         ]  # Step level border
 
         s = self.step_values[0]
-        for v in self.step_level[1:]:
+        for v in self.step_values[1:]:
             if s >= v:
                 raise EntryException(
                     f"Failed to crate entry for {self.pv.pvname}, step values {self.alarm_values} are not sorted"
@@ -202,7 +202,9 @@ class Entry:
         self.max_level = len(self.step_values)
 
     def __str__(self):
-        return f"<Entry={self.pv.pvname} group={self.group} condition={self.condition}>"
+        return (
+            f'<Entry={self.pv.pvname} group={self.group} condition="{self.condition}">'
+        )
 
     def find_next_level(self, value) -> int:
         loop_level = 0
