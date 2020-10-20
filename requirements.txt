@@ -1,2 +1,4 @@
 pandas
-pyepics
+pyepics==3.4.1
+pcaspy==0.7.3
+PyYaml==5.3.*

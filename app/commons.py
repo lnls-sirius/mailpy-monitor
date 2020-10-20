@@ -111,9 +111,6 @@ class Entry:
         group: Group,
         sms_queue: multiprocessing.Queue,
     ):
-        self.pv: epics.PV = epics.PV(pvname=pvname)
-        self.pv.add_callback(self.check_alarms)
-
         self.condition = condition.lower().strip()
         self.alarm_values = alarm_values
         self.unit = unit
@@ -125,25 +122,29 @@ class Entry:
         self.lock = threading.RLock()
         self.sms_queue = sms_queue
 
+        self.step_level: int = 0  # Actual level
+        self.step_values: typing.List[float] = []  # Step value according to level
+
         # reset last_event_time for all PVs, so it start monitoring right away
         self.last_event_time = time.time() - self.email_timeout
 
         if self.condition == Condition.OutOfRange:
-            self.__init_out_of_range__()
+            self._init_out_of_range()
         elif self.condition == Condition.SuperiorThan:
-            self.__init_superior_than()
+            self._init_superior_than()
         elif self.condition == Condition.InferiorThan:
-            self.__init_inferior_than()
+            self._init_inferior_than()
         elif self.condition == Condition.DecreasingStep:
             # @todo:Condition not supported
             pass
         elif self.condition == Condition.IncreasingStep:
-            self.__init_increasing_step__()
+            self._init_increasing_step()
 
-        self.step_level: int = 0  # Actual level
-        self.step_values: typing.List[float] = []  # Step value according to level
+        # The last action is to create a PV
+        self.pv: epics.PV = epics.PV(pvname=pvname)
+        self.pv.add_callback(self.check_alarms)
 
-    def __init_out_of_range__(self):
+    def _init_out_of_range(self):
         _min, _max = self.alarm_values.split(":")
         self.alarm_min = float(_min)
         self.alarm_max = float(_max)
@@ -152,13 +153,13 @@ class Entry:
                 f"Cannot create entry for {self.pv.pvname} with values {self.alarm_values}. Min must be lesser than max"
             )
 
-    def __init_superior_than(self):
+    def _init_superior_than(self):
         self.alarm_max = float(self.alarm_values)
 
-    def __init_inferior_than(self):
+    def _init_inferior_than(self):
         self.alarm_min = float(self.alarm_values)
 
-    def __init_increasing_step__(self):
+    def _init_increasing_step(self):
         """
         create two dictionaries, "step_level" and "step":
          -------------------------------------------------------------------------
@@ -205,7 +206,7 @@ class Entry:
         self.max_level = len(self.step_values)
 
     def __str__(self):
-        return f'<Entry={self.pv.pvname} group={self.group} condition="{self.condition} alarm_values={self.alarm_values} emails={self.emails}">'
+        return f'<Entry={self.pv.pvname} group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
 
     def find_next_level(self, value) -> int:
         loop_level = 0
@@ -216,11 +217,12 @@ class Entry:
                 return loop_level
             loop_level += 1
 
-    def handle_condition(self, value):
+    def handle_condition(self, value) -> typing.Optional[EmailEvent]:
         """
         Handle the alarm condition and return an post a request to the SMS queue.
         """
         specified_value_message: typing.Optional[str] = None
+        event: typing.Optional[EmailEvent] = None
 
         if self.condition == Condition.OutOfRange and (
             value < self.alarm_min or value > self.alarm_max
@@ -245,11 +247,11 @@ class Entry:
 
             if value >= next_step_limiar and self.step_level == self.max_level:
                 # We are already at the maximum level
-                return
+                pass
 
             if value < next_step_limiar and self.step_level == self.min_level:
                 # We are already at the lowest level
-                return
+                pass
 
             if (
                 value < next_step_limiar
@@ -262,40 +264,28 @@ class Entry:
                     f"{self} going down from level {self.step_level} to {loop_level}"
                 )
                 self.step_level = loop_level
-                return
-
-        else:
-            # @todo:Condition not supported "elif self.condition == Condition.DecreasingStep:"
-            logger.error(f"Invalid condition for {self}")
-            return
-
-        event: typing.Optional[EmailEvent] = None
+                pass
 
         try:
-            if not specified_value_message:
-                raise EntryException(
-                    f"Something wrong happened, no specified message for entry {self}"
+            if specified_value_message:
+                event = EmailEvent(
+                    pvname=self.pv.pvname,
+                    specified_value_message=specified_value_message,
+                    unit=self.unit,
+                    warning=self.warning_message,
+                    subject=self.subject,
+                    emails=self.emails,
+                    condition=self.condition,
+                    value_measured="{:.4}".format(
+                        value
+                    ),  # Consider using prec field from PV
                 )
-
-            event = EmailEvent(
-                pvname=self.pv.pvname,
-                specified_value_message=specified_value_message,
-                unit=self.unit,
-                warning=self.warning_message,
-                subject=self.subject,
-                emails=self.emails,
-                condition=self.condition,
-                value_measured=str(value),
-            )
-            self.sms_queue.put(event, block=False, timeout=None)
 
         except EntryException:
             logger.exception(f"Invalid entry {self}")
 
-        except queue.Full:
-            logger.exception(
-                f"Failed to put entry in queue {self} {event}. Queue is full, something wrong is happening..."
-            )
+        finally:
+            return event
 
     def trigger(self):
         """ Manual trigger """
@@ -308,12 +298,12 @@ class Entry:
         :return bool: Perform or not the alarm check.
         """
         if not self.group.enabled:
-            logger.info(f"Ignoring {self} due to disabled group")
+            logger.debug(f"Ignoring {self} due to disabled group")
             return
 
         if not self.pv.connected:
-            logger.warning(f"Ignoring {self}, PV is disconnected")
             # @todo: Consider sending an email due to disconnected PV
+            logger.debug(f"Ignoring {self}, PV is disconnected")
             return
 
         timestamp = time.time()
@@ -324,6 +314,16 @@ class Entry:
             )
             return
 
-        with self.lock:
-            self.last_event_time = timestamp
-            self.handle_condition(value=kwargs["value"])
+        try:
+            with self.lock:
+                event = self.handle_condition(value=kwargs["value"])
+
+                if event:
+                    self.sms_queue.put(event, block=False, timeout=None)
+                    self.last_event_time = timestamp
+                    logger.info(f"New event {event}")
+
+        except queue.Full:
+            logger.exception(
+                f"Failed to put entry in queue {self} {event}. Queue is full, something wrong is happening..."
+            )

@@ -145,7 +145,7 @@ class SMSApp:
             <body>
                 <p> {event.warning} <br>
                     <ul>
-                        <li><b>PV name:         </b> {event.warning} <br></li>
+                        <li><b>PV name:         </b> {event.pvname} <br></li>
                         <li><b>Specified range: </b> {event.specified_value_message}<br></li>
                         <li><b>Value measured:  </b> {event.value_measured} {event.unit}<br></li>
                         <li><b>Timestamp:       </b> {timestamp}<br></li>
@@ -272,8 +272,8 @@ class SMSApp:
 
             if type(event) == commons.EmailEvent:
                 # Send an email
-                email = self.compose_msg(event)
-                self.send_email(event.emails, email)
+                message = self.compose_msg(event)
+                self.send_email(event, message)
 
             elif type(event) == commons.ConfigEvent:
                 self.handle_config(event)

@@ -10,15 +10,15 @@ handlers:
     stream: ext://sys.stdout
 loggers:
   SMS:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: no
   IOC:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: no
   COMMONS:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: no
 root:
