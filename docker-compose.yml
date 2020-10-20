@@ -1,29 +1,14 @@
-version: '3.7'
+version: "3.7"
 services:
   sms:
-    image: lnlscon/notification
-    volumes:
-    #  - /home/rafael/RAFAEL/git/mailpy/app:/app
-      - /storage/services/repository/mailpy/app:/app
-    #ports:
-    #  - "465"
-    #  - "587"
-    networks:
-      hostnet: {}
-    dns:
-      - 10.0.0.71
-      - 10.0.0.72
-    #environment:
-    #  - CONS2_SMS_PASSWD=${CONS2_SMS_PASSWD}
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints:
-          - node.hostname != TA-TiRack-CO-FWSrv-1
+    image: lnlscon/notification:v2.0
+    build: .
+    network_mode: host
     secrets:
       - CONS2_SMS_PASSWD
+    volumes:
+      - ./SMS_LOGIN:/run/secrets/SMS_LOGIN
+      - ./SMS_PASSWORD:/run/secrets/SMS_PASSWORD
     logging:
       driver: "json-file"
       options:
@@ -33,8 +18,3 @@ services:
 secrets:
   CONS2_SMS_PASSWD:
     external: true
-
-networks:
-  hostnet:
-    external: true
-    name: host

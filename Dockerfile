@@ -1,45 +1,34 @@
-# use an unofficial image with EPICS base (Debian 9) as a parent image
-FROM itorafael/epics-base:r3.15.6
-LABEL maintainer="Rafael Ito <rafael.ito@lnls.br>"
+FROM centos:7
+LABEL maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
+LABEL github="https://github.com/carneirofc/mailpy"
 USER root
 
-#================================================
-# install prerequisites
-#================================================
-RUN apt-get update && apt-get install -y \
-    swig \
-    python3 \
-    python3-pip
-#------------------------------------------------
-# copy "requirements.txt" file and install needed packages
-WORKDIR /app
-COPY requirements.txt /app
-RUN pip3 install -r requirements.txt
-#------------------------------------------------
-# set correct timezone
-ENV TZ=America/Sao_Paulo
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN mkdir -p /etc/yum/repos.d &&\
+    rpm --import https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc &&\
+    echo "[conda]" > /etc/yum/repos.d/conda.repo &&\
+    echo "name=Conda" >> /etc/yum/repos.d/conda.repo &&\
+    echo "baseurl=https://repo.anaconda.com/pkgs/misc/rpmrepo/conda" >> /etc/yum/repos.d/conda.repo &&\
+    echo "enabled=1" >> /etc/yum/repos.d/conda.repo &&\
+    echo "gpgcheck=1" >> /etc/yum/repos.d/conda.repo &&\
+    echo "gpgkey=https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc" >> /etc/yum/repos.d/conda.repo
 
-#================================================
-# PORTS exposure
-#================================================
-# make ports 465 and 587 available to the world outside this container
-# Port 465: authenticated SMTP over TLS/SSL (SMTPS)
-# Port 587: email message submission (SMTP)
-EXPOSE 465
-EXPOSE 587
+RUN yum install conda -y
+RUN mkdir -p /mailpy
 
-#================================================
-# Environment Variables
-#================================================
-#ENV EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST localhost"
-#ARG CONS2_SMS_PASSWD
+ADD requirements.txt /mailpy/requirements.txt
 
-#================================================
-# start the container
-#================================================
-WORKDIR /app
-# mount volume instead of copying files
-#COPY app/sms.py /app
-#COPY app/sms_table.csv /app
-CMD python3 sms.py -p $(cat /run/secrets/CONS2_SMS_PASSWD)
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate &&\
+    conda install -y python=3.8.5 swig &&\
+    conda install -c conda-forge epics-base pcaspy &&\
+    pip install -r /mailpy/requirements.txt"
+
+ADD . /mailpy
+
+WORKDIR /mailpy
+
+CMD /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh &&\
+    conda activate && \
+    python entrypoint.py \
+        --login \"$(cat /run/secrets/SMS_LOGIN)\"\
+        -p \"$(cat /run/secrets/SMS_PASSWORD)\""
+

@@ -1,0 +1,13 @@
+.dockerignore
+.flake8
+.git
+.gitignore
+.idea
+.pre-commit-config.yaml
+.vscode
+Dockerfile
+README.md
+docker-compose.yml
+pyproject.toml
+requirements-dev.txt
+test_table.csv
