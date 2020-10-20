@@ -59,15 +59,12 @@ class SMSApp:
             max_workers=self.main_thread_executor_workers,
             thread_name_prefix="SMSAction",
         )
-        # self.main_thread = threading.Thread(
-        #    daemon=False, target=self.do_main_action, name="SMS Main"
-        # )
         self.tick_thread = threading.Thread(
             daemon=False, target=self.do_tick, name="SMS Tick"
         )
 
     def load_csv_table(self):
-        """ read csv file, read its values and store them in variables """
+        """ Load csv file, read its values and store them in variables """
         if not os.path.isfile(self.table):
             raise SMSException(
                 f'Failed to load csv data. File "{self.table}" does not exist'

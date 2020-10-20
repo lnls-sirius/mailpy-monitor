@@ -213,7 +213,7 @@ class Entry:
         self.max_level = len(self.step_values)
 
     def __str__(self):
-        return f'<Entry={self.pv.pvname} group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
+        return f'<Entry="{self.pv.pvname}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
 
     def find_next_level(self, value) -> int:
         loop_level = 0
