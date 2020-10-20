@@ -3,6 +3,8 @@ import logging
 import os
 import ssl
 import threading
+import multiprocessing
+import queue
 import time
 import typing
 from time import localtime, strftime
@@ -13,8 +15,12 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from . import SMS_QUEUE
 from . import commons
+from . import (
+    ENABLE_STS,
+    SMS_ENABLE_PV_STS,
+    SMS_PREFIX,
+)
 
 logger = logging.getLogger("SMS")
 
@@ -25,7 +31,18 @@ class SMSException(Exception):
 
 
 class SMSApp:
-    def __init__(self, tls: bool, login: str, passwd: str, table: str):
+    def __init__(
+        self,
+        tls: bool,
+        login: str,
+        passwd: str,
+        table: str,
+        ioc_queue: multiprocessing.Queue,
+        sms_queue: multiprocessing.Queue,
+    ):
+        self.ioc_queue = ioc_queue
+        self.sms_queue = sms_queue
+
         self.entries: typing.Dict[str, commons.Entry] = {}
         self.groups: typing.Dict[str, commons.Group] = {}
         self.tls: bool = tls
@@ -54,7 +71,7 @@ class SMSApp:
 
         # parse other columns
         for index, row in df.iterrows():
-            enable_pv_string = row["enable PV"]
+            enable_pv_string = row["group"]
             if enable_pv_string not in self.groups:
                 self.groups[enable_pv_string] = commons.Group(
                     pvname=enable_pv_string, enabled=True
@@ -62,20 +79,37 @@ class SMSApp:
                 logger.info(f"Creating group {self.groups[enable_pv_string]}")
 
             pvname = row["PV"]
+            emails = row["emails"]
+            condition = row["condition"].lower().strip()
+            alarm_values = row["specified value"]
+            unit = row["measurement unit"]
+            warning_message = row["warning message"]
+            subject = row["email subject"]
+            email_timeout = row["timeout"]
+
             if pvname in self.entries:
-                logger.warning(f"Multiple {pvname} entries")
-                continue
+                e: commons.Entry = self.entries[pvname]
+                if (
+                    e.emails == emails
+                    and e.condition == condition
+                    and e.alarm_values == alarm_values
+                ):
+                    logger.warning(
+                        f"Ignoring duplicated entries: {pvname} {emails} {condition} {alarm_values}"
+                    )
+                    continue
             try:
                 self.entries[pvname] = commons.Entry(
                     pvname=pvname,
-                    emails=row["emails"],
-                    condition=row["condition"],
-                    alarm_values=row["specified value"],
-                    unit=row["measurement unit"],
-                    warning_message=row["warning message"],
-                    subject=row["email subject"],
-                    email_timeout=row["timeout"],
+                    emails=emails,
+                    condition=condition,
+                    alarm_values=alarm_values,
+                    unit=unit,
+                    warning_message=warning_message,
+                    subject=subject,
+                    email_timeout=email_timeout,
                     group=self.groups[enable_pv_string],
+                    sms_queue=self.sms_queue,
                 )
                 logger.info(f"Creating entry {self.entries[pvname]}")
             except commons.EntryException:
@@ -191,6 +225,7 @@ class SMSApp:
                     server.login(self.login, self.passwd)
                     authentication = True
                     logger.info(f"logged successfully with {self.login}")
+                    return True
 
         except ssl.SSLError:
             logger.exception("Error from the underlying SSL implementation")
@@ -229,7 +264,7 @@ class SMSApp:
             return
 
         while self.running:
-            event = SMS_QUEUE.get(block=True, timeout=None)
+            event = self.sms_queue.get(block=True, timeout=None)
 
             if not self.enable:
                 logger.warning('SMS is disabled (PV "CON:MailServer:Enable" is zero)')
@@ -251,22 +286,58 @@ class SMSApp:
         Handle configuration changes.
         :param commons.ConfigEvent event: Configuration event.
         """
-        if event.config_type == commons.ConfigType.DisableSMS:
-            self.enable = True if event.value else False
-            event.complete_transaction(self.enable)
-            logger.info(f"SMS status enabled={self.enable}")
+        try:
+            if event.config_type == commons.ConfigType.SetSMSState:
+                self.enable = True if event.value else False
 
-        elif event.config_type == commons.ConfigType.DisableGroup:
-            if event.pv_name not in self.groups:
-                logger.warning(
-                    f"Failed to handle {event}, {event.pv_name} is not a valid group"
+                self.ioc_queue.put(
+                    {
+                        "reason": SMS_ENABLE_PV_STS,
+                        "value": 1 if self.enable else 0,
+                    }
                 )
-                return
+                logger.info(f"SMS status enable={self.enable}")
 
-            group: commons.Group = self.groups[event.pv_name].enabled
-            group.enabled = True if event.value else False
-            event.complete_transaction(group.enabled)
-            logger.info(f"Group {group} enabled={event.value}")
+            elif event.config_type == commons.ConfigType.GetSMSState:
+                self.ioc_queue.put(
+                    {"reason": event.pv_name, "value": 1 if self.enable else 0}
+                )
 
-        else:
-            logger.error("Unsupported config event type {event}")
+            elif (
+                event.config_type == commons.ConfigType.SetGroupState
+                or event.config_type == commons.ConfigType.GetGroupState
+            ):
+                group_name = event.pv_name
+                if group_name not in self.groups:
+                    # Invalid group
+                    logger.warning(
+                        f"Failed to handle {event}, {group_name} is not a valid group"
+                    )
+                    return
+
+                group: commons.Group = self.groups[group_name]
+
+                if event.config_type == commons.ConfigType.SetGroupState:
+
+                    group.enabled = True if event.value else False
+                    self.ioc_queue.put(
+                        {
+                            "reason": f"{SMS_PREFIX}:{group_name}:{ENABLE_STS}",
+                            "value": 1 if event.value else 0,
+                        }
+                    )
+                    logger.info(f"Group {group} enabled={event.value}")
+
+                elif event.config_type == commons.ConfigType.GetGroupState:
+
+                    self.ioc_queue.put(
+                        {
+                            "reason": f"{SMS_PREFIX}:{group_name}:{ENABLE_STS}",
+                            "value": 1 if group.enable else 0,
+                        }
+                    )
+
+            else:
+                logger.error("Unsupported config event type {event}")
+        except queue.Full:
+            logger.exception("Cannot send information back to the IOC.")

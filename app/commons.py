@@ -4,8 +4,7 @@ import epics
 import logging
 import queue
 import threading
-
-from . import SMS_QUEUE
+import multiprocessing
 
 logger = logging.getLogger("COMMONS")
 
@@ -19,8 +18,11 @@ class Condition(object):
 
 
 class ConfigType(object):
-    DisableSMS = 0
-    DisableGroup = 1
+    SetSMSState = 0
+    SetGroupState = 1
+
+    GetSMSState = 2
+    GetGroupState = 3
 
 
 class Group:
@@ -37,7 +39,7 @@ class Group:
     @enabled.setter
     def enabled(self, value: bool):
         with self.lock:
-            self.enabled = value
+            self._enabled = value
 
     def __str__(self):
         return f'<Group="{self.pvname}" enabled={self.enabled}>'
@@ -48,22 +50,21 @@ class EntryException(Exception):
         super().__init__(*args)
 
 
+class ResponseEvent:
+    def __init__(self):
+        pass
+
+
 class ConfigEvent:
     def __init__(
         self,
         config_type: int,
-        value,
+        value=None,
         pv_name: str = None,
-        success_callback: typing.Callable[[str, int], None] = None,
     ):
         self.config_type = config_type
         self.value = value
-        self.success_callback = success_callback
         self.pv_name = pv_name
-
-    def complete_transaction(self, new_value):
-        if self.pv_name and self.success_callback:
-            self.success_callback(self.pv_name, new_value)
 
     def __str__(self):
         return f"<ConfigEvent={self.config_type} value={self.value}>"
@@ -108,6 +109,7 @@ class Entry:
         subject: str,
         email_timeout: float,
         group: Group,
+        sms_queue: multiprocessing.Queue,
     ):
         self.pv: epics.PV = epics.PV(pvname=pvname)
         self.pv.add_callback(self.check_alarms)
@@ -121,6 +123,7 @@ class Entry:
         self.emails = emails
         self.group = group
         self.lock = threading.RLock()
+        self.sms_queue = sms_queue
 
         # reset last_event_time for all PVs, so it start monitoring right away
         self.last_event_time = time.time() - self.email_timeout
@@ -202,9 +205,7 @@ class Entry:
         self.max_level = len(self.step_values)
 
     def __str__(self):
-        return (
-            f'<Entry={self.pv.pvname} group={self.group} condition="{self.condition}">'
-        )
+        return f'<Entry={self.pv.pvname} group={self.group} condition="{self.condition} alarm_values={self.alarm_values} emails={self.emails}">'
 
     def find_next_level(self, value) -> int:
         loop_level = 0
@@ -286,7 +287,7 @@ class Entry:
                 condition=self.condition,
                 value_measured=str(value),
             )
-            SMS_QUEUE.put(event, block=False, timeout=None)
+            self.sms_queue.put(event, block=False, timeout=None)
 
         except EntryException:
             logger.exception(f"Invalid entry {self}")
@@ -312,6 +313,7 @@ class Entry:
 
         if not self.pv.connected:
             logger.warning(f"Ignoring {self}, PV is disconnected")
+            # @todo: Consider sending an email due to disconnected PV
             return
 
         timestamp = time.time()

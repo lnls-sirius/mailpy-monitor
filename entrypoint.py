@@ -3,9 +3,13 @@ import logging
 import logging.config
 import argparse
 import yaml
+import typing
+import multiprocessing
 
+import app
 import app.sms
 import app.ioc
+import app.commons
 
 if __name__ == "__main__":
     with open("app/logging.yaml", "r") as f:
@@ -46,17 +50,31 @@ if __name__ == "__main__":
 
     # SMS
     sms_app = app.sms.SMSApp(
-        tls=args.tls, login=args.login, passwd=args.passwd, table=args.table
+        tls=args.tls,
+        login=args.login,
+        passwd=args.passwd,
+        table=args.table,
+        sms_queue=app.SMS_QUEUE,
+        ioc_queue=app.IOC_QUEUE,
     )
+
     sms_app.load_csv_table()
     sms_app.start()
 
-    # EPICS
-    driver = app.ioc.SMSEpicsDriver(sms_app=sms_app)
-    server = app.ioc.SMSEpicsServer(driver=driver)
-    server.start()
+    groups: typing.Dict[str, int] = {}
+    for k, v in sms_app.groups.items():
+        groups[k] = v.enabled
 
-    # Loop until completion
-    sms_app.tick_thread.join()
-    sms_app.main_thread.join()
-    server.thread.join()
+    ioc_process = multiprocessing.Process(
+        name="IOCProcess",
+        target=app.ioc.start_ioc,
+        kwargs={
+            "groups": groups,
+            "sms_queue": app.SMS_QUEUE,
+            "ioc_queue": app.IOC_QUEUE,
+        },
+        daemon=False,
+    )
+
+    ioc_process.start()
+    ioc_process.join()
