@@ -7,6 +7,7 @@ import multiprocessing
 import queue
 import time
 import typing
+import concurrent.futures
 from time import localtime, strftime
 
 import pandas
@@ -53,9 +54,14 @@ class SMSApp:
         self.enable: bool = True
         self.running: bool = True
 
-        self.main_thread = threading.Thread(
-            daemon=False, target=self.do_main_action, name="SMS Main"
+        self.main_thread_executor_workers = 5
+        self.main_thread_executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.main_thread_executor_workers,
+            thread_name_prefix="SMSAction",
         )
+        # self.main_thread = threading.Thread(
+        #    daemon=False, target=self.do_main_action, name="SMS Main"
+        # )
         self.tick_thread = threading.Thread(
             daemon=False, target=self.do_tick, name="SMS Tick"
         )
@@ -240,7 +246,11 @@ class SMSApp:
         return False
 
     def start(self):
-        self.main_thread.start()
+        # self.main_thread.start()
+        for i in range(self.main_thread_executor_workers):
+            self.main_thread_executor.submit(self.do_main_action)
+        self.main_thread_executor.shutdown(wait=False)
+
         self.tick_thread.start()
 
     def do_tick(self):

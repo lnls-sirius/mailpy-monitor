@@ -10,6 +10,8 @@ logger = logging.getLogger("COMMONS")
 
 
 class Condition(object):
+    """ Alarm  conditions """
+
     OutOfRange = "out of range"
     SuperiorThan = "if superior than"
     InferiorThan = "if inferior than"
@@ -18,6 +20,8 @@ class Condition(object):
 
 
 class ConfigType(object):
+    """ IOC command types """
+
     SetSMSState = 0
     SetGroupState = 1
 
@@ -26,6 +30,8 @@ class ConfigType(object):
 
 
 class Group:
+    """ Group of PVs """
+
     def __init__(self, pvname: str, enabled: bool = True):
         self.pvname: str = pvname
         self._enabled: bool = enabled
@@ -50,12 +56,9 @@ class EntryException(Exception):
         super().__init__(*args)
 
 
-class ResponseEvent:
-    def __init__(self):
-        pass
-
-
 class ConfigEvent:
+    """ Configuration event sent by the IOC to the SMS queue """
+
     def __init__(
         self,
         config_type: int,
@@ -71,6 +74,8 @@ class ConfigEvent:
 
 
 class EmailEvent:
+    """ Email event sent by entry to the SMS queue to signal alarms """
+
     def __init__(
         self,
         pvname,
@@ -98,6 +103,8 @@ class EmailEvent:
 
 
 class Entry:
+    """ Encapsulates a PV and the email logic associated with it """
+
     def __init__(
         self,
         pvname: str,
@@ -141,7 +148,7 @@ class Entry:
             self._init_increasing_step()
 
         # The last action is to create a PV
-        self.pv: epics.PV = epics.PV(pvname=pvname)
+        self.pv: epics.PV = epics.PV(pvname=pvname.strip())
         self.pv.add_callback(self.check_alarms)
 
     def _init_out_of_range(self):
