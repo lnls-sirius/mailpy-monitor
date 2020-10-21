@@ -1,3 +1,0 @@
-ID,emails,PV,condition,specified value,measurement unit,email subject,warning message,timeout,enable PV
-25,rafael.ito@lnls.br;ito.rafael@gmail.com,TEST1,out of range,17:22,°C,Linac K2 Water Temperature Warning,Warning: Klystron 2 (Oil-tank) water temperature exceeded its limits!,3600,SMS:TEST1:Enable
-26,rafael.ito@lnls.br,test2,increasing step,1.0:1.5:2.0:2.5:3.0:3.5:4.0:4.5:5.0,µS,Berthold Total Dose Rate Warning,Warning: Berthold total dose rate exceeded its limits!,0,SMS:test2:Enable
