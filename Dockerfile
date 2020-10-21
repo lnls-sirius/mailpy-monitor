@@ -3,6 +3,9 @@ LABEL maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
 LABEL github="https://github.com/carneirofc/mailpy"
 USER root
 
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN mkdir -p /etc/yum/repos.d &&\
     rpm --import https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc &&\
     echo "[conda]" > /etc/yum/repos.d/conda.repo &&\
