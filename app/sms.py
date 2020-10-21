@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import logging
-import os
 import ssl
 import threading
 import multiprocessing
@@ -10,13 +9,13 @@ import typing
 import concurrent.futures
 from time import localtime, strftime
 
-import pandas
 import smtplib
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from . import commons
+from . import db
 from . import (
     ENABLE_STS,
     SMS_ENABLE_PV_STS,
@@ -37,9 +36,9 @@ class SMSApp:
         tls: bool,
         login: str,
         passwd: str,
-        table: str,
         ioc_queue: multiprocessing.Queue,
         sms_queue: multiprocessing.Queue,
+        db_url: str,
     ):
         self.ioc_queue = ioc_queue
         self.sms_queue = sms_queue
@@ -49,10 +48,11 @@ class SMSApp:
         self.tls: bool = tls
         self.login: str = login
         self.passwd: str = passwd
-        self.table: str = table
         self.tick: float = 15
         self.enable: bool = True
         self.running: bool = True
+
+        self.db = db.DBManager(url=db_url)
 
         self.main_thread_executor_workers = 5
         self.main_thread_executor = concurrent.futures.ThreadPoolExecutor(
@@ -63,58 +63,27 @@ class SMSApp:
             daemon=False, target=self.do_tick, name="SMS Tick"
         )
 
-    def load_csv_table(self):
-        """ Load csv file, read its values and store them in variables """
-        if not os.path.isfile(self.table):
-            raise SMSException(
-                f'Failed to load csv data. File "{self.table}" does not exist'
-            )
+    def load_from_database(self):
+        """ Load entries from database """
+        dict_entries = self.db.get_entries()
+        for d_entry in dict_entries:
 
-        df: typing.Optional[pandas.DataFrame] = pandas.read_csv(self.table)
+            # Create group if needed
+            group_name = d_entry["group"]
+            if group_name not in self.groups:
+                self.groups[group_name] = commons.Group(name=group_name, enabled=True)
+                logger.info(f"Creating group {self.groups[group_name]}")
 
-        # parse other columns
-        for index, row in df.iterrows():
-            enable_pv_string = row["group"]
-            if enable_pv_string not in self.groups:
-                self.groups[enable_pv_string] = commons.Group(
-                    pvname=enable_pv_string, enabled=True
-                )
-                logger.info(f"Creating group {self.groups[enable_pv_string]}")
-
-            pvname = row["PV"]
-            emails = row["emails"]
-            condition = row["condition"].lower().strip()
-            alarm_values = row["specified value"]
-            unit = row["measurement unit"]
-            warning_message = row["warning message"]
-            subject = row["email subject"]
-            email_timeout = row["timeout"]
-
-            if pvname in self.entries:
-                e: commons.Entry = self.entries[pvname]
-                if (
-                    e.emails == emails
-                    and e.condition == condition
-                    and e.alarm_values == alarm_values
-                ):
-                    logger.warning(
-                        f"Ignoring duplicated entries: {pvname} {emails} {condition} {alarm_values}"
-                    )
-                    continue
             try:
-                self.entries[pvname] = commons.Entry(
-                    pvname=pvname,
-                    emails=emails,
-                    condition=condition,
-                    alarm_values=alarm_values,
-                    unit=unit,
-                    warning_message=warning_message,
-                    subject=subject,
-                    email_timeout=email_timeout,
-                    group=self.groups[enable_pv_string],
-                    sms_queue=self.sms_queue,
+                _id = d_entry["_id"]
+                d_entry.pop(
+                    "group", None
+                )  # Remove the group name as we are using the object
+
+                self.entries[_id] = commons.Entry(
+                    group=self.groups[group_name], sms_queue=self.sms_queue, **d_entry
                 )
-                logger.info(f"Creating entry {self.entries[pvname]}")
+                logger.info(f"Creating entry {self.entries[_id]}")
             except commons.EntryException:
                 logger.exception("Failed to create entry")
 

@@ -1,10 +1,10 @@
-SMS: Spam Mailing Service (former CMS - CON Mailing Service)
+SMS: Spam Mailing Service
 ============================================================
 Python script that monitors PVs EPICS, check their specified operation values and send an e-mail
 to a list of targets with a warning message if the PV value exceed its limits.
 
 This code reads a list of EPICS PVs and their corresponding specified values
-from a CSV file and monitor them. If any these PVs is not in it's specified
+from a MongoDB and monitor them. If any these PVs is not in it's specified
 value, an e-mail is sent with a warning message to one or a list of e-mail
 address.
 
@@ -22,33 +22,24 @@ Install **pre-commit** !
 To do:
 ----------
 
-    - if cell is empty, its breaking the code
-    - from time to time read csv file to update tables (?)
+    - Signal SMS application to update the entries (Create/Update/Remove)
     - support for condition 'decreasing step' (similar to 'increasing step')
-    - loop for generating PVs according to csv colums (check "test.py")
-    - supervisory for the SMS (Spam Mail Server) --> PyDM? Web?
-    - load supervisory by reading csv file (similar to this code)
+    - consider generating PVs for each entry (configurable settings)
+    - supervisory --> PyDM? Web?
+    - Consider creating an "user" collection
 
 Syntax:
 ----------
-    - cells should not be left empty!
-    - separate e-mails with semicolon (";") and no space
+
+    - separate e-mails with semicolon (";")
         e.g.: "rafael.ito@lnls.br;ito.rafael@gmail.com"
-    - separate specified value with colon (":") and no space
+    - separate specified value with colon (":")
         e.g.:
 
-        | Status           | Syntax                |
-        |------------------|-----------------------|
-        |"out of range"    | "17:22"               |
-        |"increasing step" | "1.0:1.5:2.0:2.5:3.0" |
-        |"superior than"   | "46"                  |
 
-CSV definition:
-
-    conditions
-
-        * "out of range"
-        * "if superior than"
-        * "if inferior than"
-        * "increasing step"
-        * "decreasing step"
+| Conditions    | Description  |Syntax                |
+|---------------|--------------|----------------------|
+|out of range   |              |"17:22"               |
+|increasing step|              |"1.0:1.5:2.0:2.5:3.0" |
+|superior than  |              |"42"                  |
+|inferior than  |              |"46"                  |

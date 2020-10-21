@@ -13,10 +13,29 @@ class Condition(object):
     """ Alarm  conditions """
 
     OutOfRange = "out of range"
-    SuperiorThan = "if superior than"
-    InferiorThan = "if inferior than"
+    SuperiorThan = "superior than"
+    InferiorThan = "inferior than"
     IncreasingStep = "increasing step"
     DecreasingStep = "decreasing step"
+
+    @staticmethod
+    def get_conditions() -> typing.List:
+        return [
+            {
+                "name": Condition.OutOfRange,
+                "desc": "Must remain within the specified range.",
+            },
+            {"name": Condition.SuperiorThan, "desc": "Must remain superior than."},
+            {"name": Condition.InferiorThan, "desc": "Must remain inferior than."},
+            {
+                "name": Condition.IncreasingStep,
+                "desc": "Each increasing step triggers an alarm.",
+            },
+            {
+                "name": Condition.DecreasingStep,
+                "desc": "Each decreasing step triggers an alarm.",
+            },
+        ]
 
 
 class ConfigType(object):
@@ -27,28 +46,6 @@ class ConfigType(object):
 
     GetSMSState = 2
     GetGroupState = 3
-
-
-class Group:
-    """ Group of PVs """
-
-    def __init__(self, pvname: str, enabled: bool = True):
-        self.pvname: str = pvname
-        self._enabled: bool = enabled
-        self.lock = threading.RLock()
-
-    @property
-    def enabled(self):
-        with self.lock:
-            return self._enabled
-
-    @enabled.setter
-    def enabled(self, value: bool):
-        with self.lock:
-            self._enabled = value
-
-    def __str__(self):
-        return f'<Group="{self.pvname}" enabled={self.enabled}>'
 
 
 class EntryException(Exception):
@@ -102,6 +99,31 @@ class EmailEvent:
         return f"<EmailEvent {self.pvname} {self.specified_value_message} {self.subject} {self.emails} {self.warning}>"
 
 
+class Group:
+    """ Group of PVs """
+
+    def __init__(self, name: str, enabled: bool = True):
+        self.name: str = name
+        self._enabled: bool = enabled
+        self.lock = threading.RLock()
+
+    @property
+    def enabled(self):
+        with self.lock:
+            return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        with self.lock:
+            self._enabled = value
+
+    def __str__(self):
+        return f'<Group="{self.name}" enabled={self.enabled}>'
+
+    def as_dict(self):
+        return {"name": self.name, "enabled": self.enabled}
+
+
 class Entry:
     """ Encapsulates a PV and the email logic associated with it """
 
@@ -117,7 +139,10 @@ class Entry:
         email_timeout: float,
         group: Group,
         sms_queue: multiprocessing.Queue,
+        _id=None,
     ):
+        self.pv: typing.Optional[epics.PV] = None
+        self._id = _id
         self.condition = condition.lower().strip()
         self.alarm_values = alarm_values
         self.unit = unit
@@ -141,15 +166,28 @@ class Entry:
             self._init_superior_than()
         elif self.condition == Condition.InferiorThan:
             self._init_inferior_than()
-        elif self.condition == Condition.DecreasingStep:
-            # @todo:Condition not supported
-            pass
         elif self.condition == Condition.IncreasingStep:
             self._init_increasing_step()
+        else:
+            # @todo: Condition.DecreasingStep condition not supported
+            raise EntryException(f"Invalid condition {self.condition} for entry {self}")
 
         # The last action is to create a PV
         self.pv: epics.PV = epics.PV(pvname=pvname.strip())
         self.pv.add_callback(self.check_alarms)
+
+    def as_dict(self):
+        return {
+            "pvname": self.pv.pvname,
+            "condition": self.condition,
+            "alarm_values": self.alarm_values,
+            "unit": self.unit,
+            "emails": self.emails,
+            "group": self.group.name,
+            "warning_message": self.warning_message,
+            "subject": self.subject,
+            "email_timeout": self.email_timeout,
+        }
 
     def _init_out_of_range(self):
         _min, _max = self.alarm_values.split(":")
@@ -157,7 +195,7 @@ class Entry:
         self.alarm_max = float(_max)
         if self.alarm_min >= self.alarm_max:
             raise EntryException(
-                f"Cannot create entry for {self.pv.pvname} with values {self.alarm_values}. Min must be lesser than max"
+                f"Cannot create entry for {self.pv.pvname if self.pv else None} with values {self.alarm_values}. Min must be lesser than max"
             )
 
     def _init_superior_than(self):
@@ -213,7 +251,7 @@ class Entry:
         self.max_level = len(self.step_values)
 
     def __str__(self):
-        return f'<Entry="{self.pv.pvname}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
+        return f'<Entry={self._id} pvname="{self.pv.pvname if self.pv else None}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
 
     def find_next_level(self, value) -> int:
         loop_level = 0

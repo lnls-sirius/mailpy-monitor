@@ -40,12 +40,13 @@ if __name__ == "__main__":
         help="set the password used when trying to log in",
     )
     parser.add_argument(
-        "-t",
-        "--table",
-        metavar="my_table.csv",
-        default="sms_table.csv",
-        help="choose the csv file to read data from (default: sms_table.csv)",
+        "-db",
+        "--db_url",
+        metavar="mongodb://localhost:27017/",
+        default="mongodb://localhost:27017/",
+        help="MongoDB connection URL",
     )
+
     args = parser.parse_args()
 
     # SMS
@@ -53,12 +54,12 @@ if __name__ == "__main__":
         tls=args.tls,
         login=args.login,
         passwd=args.passwd,
-        table=args.table,
         sms_queue=app.SMS_QUEUE,
         ioc_queue=app.IOC_QUEUE,
+        db_url=args.db_url,
     )
 
-    sms_app.load_csv_table()
+    sms_app.load_from_database()
     sms_app.start()
 
     groups: typing.Dict[str, int] = {}
