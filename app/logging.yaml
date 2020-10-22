@@ -1,0 +1,30 @@
+version: 1
+formatters:
+  simple:
+    format: '%(name)s (p %(process)d %(processName)s)(t %(thread)d: %(threadName)s) [%(levelname)s]: %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: simple
+    stream: ext://sys.stdout
+loggers:
+  SMS:
+    level: INFO
+    handlers: [console]
+    propagate: no
+  DB:
+    level: INFO
+    handlers: [console]
+    propagate: no
+  IOC:
+    level: INFO
+    handlers: [console]
+    propagate: no
+  COMMONS:
+    level: INFO
+    handlers: [console]
+    propagate: no
+root:
+  level: DEBUG
+  handlers: [console]

@@ -1,45 +1,62 @@
-# use an unofficial image with EPICS base (Debian 9) as a parent image
-FROM itorafael/epics-base:r3.15.6
-LABEL maintainer="Rafael Ito <rafael.ito@lnls.br>"
+FROM centos:7
+LABEL br.cnpem.maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
+LABEL br.cnpem.git="https://github.com/carneirofc/mailpy"
 USER root
 
-#================================================
-# install prerequisites
-#================================================
-RUN apt-get update && apt-get install -y \
-    swig \
-    python3 \
-    python3-pip
-#------------------------------------------------
-# copy "requirements.txt" file and install needed packages
-WORKDIR /app
-COPY requirements.txt /app
-RUN pip3 install -r requirements.txt
-#------------------------------------------------
-# set correct timezone
 ENV TZ=America/Sao_Paulo
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-#================================================
-# PORTS exposure
-#================================================
-# make ports 465 and 587 available to the world outside this container
-# Port 465: authenticated SMTP over TLS/SSL (SMTPS)
-# Port 587: email message submission (SMTP)
-EXPOSE 465
-EXPOSE 587
+RUN mkdir -p /etc/yum/repos.d &&\
+    rpm --import https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc &&\
+    echo "[conda]" > /etc/yum/repos.d/conda.repo &&\
+    echo "name=Conda" >> /etc/yum/repos.d/conda.repo &&\
+    echo "baseurl=https://repo.anaconda.com/pkgs/misc/rpmrepo/conda" >> /etc/yum/repos.d/conda.repo &&\
+    echo "enabled=1" >> /etc/yum/repos.d/conda.repo &&\
+    echo "gpgcheck=1" >> /etc/yum/repos.d/conda.repo &&\
+    echo "gpgkey=https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc" >> /etc/yum/repos.d/conda.repo
 
-#================================================
-# Environment Variables
-#================================================
-#ENV EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST localhost"
-#ARG CONS2_SMS_PASSWD
+RUN yum install -y conda
 
-#================================================
-# start the container
-#================================================
-WORKDIR /app
-# mount volume instead of copying files
-#COPY app/sms.py /app
-#COPY app/sms_table.csv /app
-CMD python3 sms.py -p $(cat /run/secrets/CONS2_SMS_PASSWD)
+RUN groupadd --gid 1001 mailpy &&\
+    useradd --system \
+            --create-home \
+            --home-dir /home/mailpy \
+            --shell /bin/bash \
+            --uid 1001 \
+            --gid mailpy \
+            mailpy
+
+RUN chown -R mailpy:mailpy /opt/conda
+
+USER mailpy
+WORKDIR /home/mailpy
+
+RUN mkdir -p /home/mailpy/mailpy
+
+ADD requirements.txt /home/mailpy/mailpy/requirements.txt
+
+RUN /bin/bash -c \
+    "source /opt/conda/etc/profile.d/conda.sh && \
+    conda init &&\
+    conda activate &&\
+    conda install -y swig python=3.8.5 &&\
+    conda install -c conda-forge epics-base pcaspy &&\
+    pip install -r /home/mailpy/mailpy/requirements.txt"
+
+ADD . /home/mailpy/mailpy
+
+USER root
+RUN chown -R mailpy:mailpy /home/mailpy/mailpy
+USER mailpy
+
+WORKDIR /home/mailpy/mailpy
+
+ENV DB_URL mongodb://localhost:27017/mailpy-db
+
+CMD /bin/bash -c 'source /opt/conda/etc/profile.d/conda.sh &&\
+    conda activate &&\
+    python entrypoint.py \
+        -p "$(cat /run/secrets/SMS_PASSWORD)"\
+        --login "$(cat /run/secrets/SMS_LOGIN)"\
+        --db_url "${DB_URL}" '
+
