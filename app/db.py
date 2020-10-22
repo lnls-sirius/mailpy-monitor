@@ -77,7 +77,7 @@ class DBManager:
             unique=True,
         )
 
-        result = entries.insert(entry)
+        result = entries.insert(entry.as_dict())
         logger.info(f"Inserted entry {entry} id {result}")
 
     def get_group(self, group_name: str) -> typing.Optional[str]:

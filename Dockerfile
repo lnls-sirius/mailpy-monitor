@@ -1,6 +1,6 @@
 FROM centos:7
-LABEL maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
-LABEL github="https://github.com/carneirofc/mailpy"
+LABEL br.cnpem.maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
+LABEL br.cnpem.git="https://github.com/carneirofc/mailpy"
 USER root
 
 ENV TZ=America/Sao_Paulo
@@ -15,34 +15,41 @@ RUN mkdir -p /etc/yum/repos.d &&\
     echo "gpgcheck=1" >> /etc/yum/repos.d/conda.repo &&\
     echo "gpgkey=https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc" >> /etc/yum/repos.d/conda.repo
 
-RUN yum install conda -y
+RUN yum install -y conda
 
-RUN groupadd --gid 1001 wsgi &&\
+RUN groupadd --gid 1001 mailpy &&\
     useradd --system \
             --create-home \
-            --home-dir /home/wsgi \
+            --home-dir /home/mailpy \
             --shell /bin/bash \
             --uid 1001 \
-            --gid wsgi \
-            wsgi
+            --gid mailpy \
+            mailpy
 
-RUN chown -R wsgi:wsgi /opt/conda
+RUN chown -R mailpy:mailpy /opt/conda
 
-USER wsgi
-WORKDIR /home/wsgi
+USER mailpy
+WORKDIR /home/mailpy
 
-RUN mkdir -p /home/wsgi/mailpy
+RUN mkdir -p /home/mailpy/mailpy
 
-ADD requirements.txt /home/wsgi/mailpy/requirements.txt
+ADD requirements.txt /home/mailpy/mailpy/requirements.txt
 
-RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate &&\
+RUN /bin/bash -c \
+    "source /opt/conda/etc/profile.d/conda.sh && \
+    conda init &&\
+    conda activate &&\
     conda install -y swig python=3.8.5 &&\
     conda install -c conda-forge epics-base pcaspy &&\
-    pip install -r /home/wsgi/mailpy/requirements.txt"
+    pip install -r /home/mailpy/mailpy/requirements.txt"
 
-ADD . /home/wsgi/mailpy
+ADD . /home/mailpy/mailpy
 
-WORKDIR /home/wsgi/mailpy
+USER root
+RUN chown -R mailpy:mailpy /home/mailpy/mailpy
+USER mailpy
+
+WORKDIR /home/mailpy/mailpy
 
 ENV DB_URL mongodb://localhost:27017/mailpy-db
 

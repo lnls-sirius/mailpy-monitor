@@ -34,7 +34,31 @@ Install **pre-commit** !
     - Consider creating an "user" collection
     - Consider removing the IOC, access via FLASK
 
-## Syntax:
+Usage
+-----
+
+### Include new entries
+One could use the rest API and the front-end or by using the `app/utility.py` scripts.
+
+Start an interactive python session at the project root:
+
+```python
+import app.utility
+
+app.utility.connect()
+
+# Create a single entry
+app.utility.create_entry(...)
+
+# Create entries from a csv file
+app.utility.load_csv_table("sms_table.csv")
+
+# Disconnect
+app.utility.disconnect()
+
+```
+
+### Syntax:
 
     - separate e-mails with semicolon (";")
         e.g.: "unknown.user@mail.com;another_user@aMail.com"
