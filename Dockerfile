@@ -16,22 +16,40 @@ RUN mkdir -p /etc/yum/repos.d &&\
     echo "gpgkey=https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc" >> /etc/yum/repos.d/conda.repo
 
 RUN yum install conda -y
-RUN mkdir -p /mailpy
 
-ADD requirements.txt /mailpy/requirements.txt
+RUN groupadd --gid 1001 wsgi &&\
+    useradd --system \
+            --create-home \
+            --home-dir /home/wsgi \
+            --shell /bin/bash \
+            --uid 1001 \
+            --gid wsgi \
+            wsgi
+
+RUN chown -R wsgi:wsgi /opt/conda
+
+USER wsgi
+WORKDIR /home/wsgi
+
+RUN mkdir -p /home/wsgi/mailpy
+
+ADD requirements.txt /home/wsgi/mailpy/requirements.txt
 
 RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate &&\
-    conda install -y python=3.8.5 swig &&\
+    conda install -y swig python=3.8.5 &&\
     conda install -c conda-forge epics-base pcaspy &&\
-    pip install -r /mailpy/requirements.txt"
+    pip install -r /home/wsgi/mailpy/requirements.txt"
 
-ADD . /mailpy
+ADD . /home/wsgi/mailpy
 
-WORKDIR /mailpy
+WORKDIR /home/wsgi/mailpy
 
-CMD /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh &&\
-    conda activate && \
+ENV DB_URL mongodb://localhost:27017/mailpy-db
+
+CMD /bin/bash -c 'source /opt/conda/etc/profile.d/conda.sh &&\
+    conda activate &&\
     python entrypoint.py \
-        --login \"$(cat /run/secrets/SMS_LOGIN)\"\
-        -p \"$(cat /run/secrets/SMS_PASSWORD)\""
+        -p "$(cat /run/secrets/SMS_PASSWORD)"\
+        --login "$(cat /run/secrets/SMS_LOGIN)"\
+        --db_url "${DB_URL}" '
 

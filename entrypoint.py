@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-db",
         "--db_url",
-        metavar="mongodb://localhost:27017/",
+        metavar="mongodb://localhost:27017/mailpy-db",
         default="mongodb://localhost:27017/",
         help="MongoDB connection URL",
     )
