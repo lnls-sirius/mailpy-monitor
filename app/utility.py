@@ -23,6 +23,11 @@ def disconnect():
     if dbm:
         dbm.disconnect()
 
+def initialize_conditions():
+    """ Initialize the conditions collection using the supported ones from commons.Condition """
+    global dbm
+    if dbm:
+        dbm.initialize_conditions()
 
 def create_entry(
     pvname: str,
