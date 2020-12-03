@@ -19,12 +19,12 @@ RUN yum install -y conda
 
 RUN groupadd --gid 1001 mailpy &&\
     useradd --system \
-            --create-home \
-            --home-dir /home/mailpy \
-            --shell /bin/bash \
-            --uid 1001 \
-            --gid mailpy \
-            mailpy
+    --create-home \
+    --home-dir /home/mailpy \
+    --shell /bin/bash \
+    --uid 1001 \
+    --gid mailpy \
+    mailpy
 
 RUN chown -R mailpy:mailpy /opt/conda
 
@@ -56,7 +56,7 @@ ENV DB_URL mongodb://localhost:27017/mailpy-db
 CMD /bin/bash -c 'source /opt/conda/etc/profile.d/conda.sh &&\
     conda activate &&\
     python entrypoint.py \
-        -p "$(cat /run/secrets/SMS_PASSWORD)"\
-        --login "$(cat /run/secrets/SMS_LOGIN)"\
-        --db_url "${DB_URL}" '
+    -p "$(cat /run/secrets/SMS_PASSWORD)"\
+    --login "$(cat /run/secrets/SMS_LOGIN)"\
+    --db_url "${DB_URL}" '
 
