@@ -30,7 +30,7 @@ Install **pre-commit** !
 
 ### Include new entries
 
-One could use the rest API and the front-end or by using the `app/utility.py` scripts.
+One could use the rest API and the front-end or use `app/utility.py` scripts.
 
 Start an interactive python session at the project root:
 

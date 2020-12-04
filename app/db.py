@@ -67,16 +67,7 @@ class DBManager:
             DBManager.ENTRIES_COLLECTION
         ]
 
-        entries.create_index(
-            [
-                ("pvname", pymongo.ASCENDING),
-                ("emails", pymongo.ASCENDING),
-                ("condition", pymongo.ASCENDING),
-                ("alarm_values", pymongo.ASCENDING),
-            ],
-            unique=True,
-        )
-
+        logger.info(f"insert {entry.as_dict()}")
         result = entries.insert(entry.as_dict())
         logger.info(f"Inserted entry {entry} id {result}")
 
@@ -91,8 +82,6 @@ class DBManager:
         groups: pymongo.collection.Collection = self.mailpy_db[
             DBManager.GROUPS_COLLECTION
         ]
-
-        groups.create_index([("name", pymongo.ASCENDING)], unique=True)
 
         if groups.find_one({"name": group.name}):
             logger.warning(f"Group {group} already exists")
@@ -115,7 +104,6 @@ class DBManager:
         conditions: pymongo.collection.Collection = self.mailpy_db[
             DBManager.CONDITIONS_COLLECTION
         ]
-        conditions.create_index([("name", pymongo.ASCENDING)], unique=True)
         result = conditions.insert_many(commons.Condition.get_conditions())
 
         logger.info(f"Inserted {result.inserted_ids}")

@@ -219,6 +219,9 @@ class SMSApp:
 
         self.tick_thread.start()
 
+    def join(self):
+        self.tick_thread.join()
+
     def do_tick(self):
         """ Trigger Entry processing """
         while self.running:
