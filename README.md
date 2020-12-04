@@ -1,4 +1,5 @@
-# SMS: Spam Mailing Service
+Mailpy
+======
 
 Python app that monitors PVs EPICS, check their specified operation values and send an e-mail to a list of targets with a warning message if the PV value exceed its limits.
 
@@ -30,7 +31,7 @@ Install **pre-commit** !
 
 ### Include new entries
 
-One could use the rest API and the front-end or use `app/utility.py` scripts.
+One could use the rest API and the front-end or use `scripts/*.py`.
 
 Start an interactive python session at the project root:
 
