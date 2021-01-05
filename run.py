@@ -3,8 +3,6 @@ import logging
 import logging.config
 import argparse
 import yaml
-import typing
-import multiprocessing
 
 import app
 import app.sms
@@ -62,21 +60,3 @@ if __name__ == "__main__":
     sms_app.load_from_database()
     sms_app.start()
     sms_app.join()
-
-   #groups: typing.Dict[str, int] = {}
-   #for k, v in sms_app.groups.items():
-   #    groups[k] = v.enabled
-
-   #ioc_process = multiprocessing.Process(
-   #    name="IOCProcess",
-   #    target=app.ioc.start_ioc,
-   #    kwargs={
-   #        "groups": groups,
-   #        "sms_queue": app.SMS_QUEUE,
-   #        "ioc_queue": app.IOC_QUEUE,
-   #    },
-   #    daemon=False,
-   #)
-
-   #ioc_process.start()
-   #ioc_process.join()

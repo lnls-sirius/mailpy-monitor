@@ -10,11 +10,10 @@ logger = logging.getLogger()
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0,f'{here}/..')
+    sys.path.insert(0, f"{here}/..")
     with open(f"{here}/../app/logging.yaml", "r") as f:
         log_config = yaml.safe_load(f)
         logging.config.dictConfig(log_config)
-
 
     parser = argparse.ArgumentParser(
         description="Load entries and groups from a csv file"
@@ -23,9 +22,7 @@ if __name__ == "__main__":
         "file",
     )
     parser.add_argument(
-        "--url",
-        help="DB connection url",
-        default="mongodb://localhost:27017/mailpy-db"
+        "--url", help="DB connection url", default="mongodb://localhost:27017/mailpy-db"
     )
     args = parser.parse_args()
 
