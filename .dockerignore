@@ -6,7 +6,6 @@
 .pre-commit-config.yaml
 .vscode
 Dockerfile
-README.md
 docker-compose.yml
 pyproject.toml
 requirements-dev.txt
