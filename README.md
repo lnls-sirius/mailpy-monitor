@@ -11,9 +11,9 @@ address.
 
 Environment varibles:
 
-| ENV    | Default                             | Desc                      |
-| ------ | ----------------------------------- | ------------------------- |
-| DB_URL | mongodb://localhost:27017/mailpy-db | MongoDB connection string |
+| ENV         | Default                             | Desc                      |
+| ----------- | ----------------------------------- | ------------------------- |
+| MONGODB_URI | mongodb://localhost:27017/mailpy-db | MongoDB connection string |
 
 Secrets:
 
