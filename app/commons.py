@@ -125,7 +125,10 @@ class Group:
 
 
 class Entry:
-    """ Encapsulates a PV and the email logic associated with it """
+    """
+    Encapsulates a PV and the email logic associated with it
+    :dummy bool: signal a dummy entry, used for tests and utility scripts.
+    """
 
     def __init__(
         self,
@@ -140,6 +143,7 @@ class Entry:
         group: Group,
         sms_queue: multiprocessing.Queue,
         _id=None,
+        dummy: bool = False,
     ):
         self.pv: typing.Optional[epics.PV] = None
         self._id = _id
@@ -172,9 +176,10 @@ class Entry:
             # @todo: Condition.DecreasingStep condition not supported
             raise EntryException(f"Invalid condition {self.condition} for entry {self}")
 
-        # The last action is to create a PV
-        self.pv: epics.PV = epics.PV(pvname=pvname.strip())
-        self.pv.add_callback(self.check_alarms)
+        if not dummy:
+            # The last action is to create a PV
+            self.pv: epics.PV = epics.PV(pvname=pvname.strip())
+            self.pv.add_callback(self.check_alarms)
 
     def as_dict(self):
         return {

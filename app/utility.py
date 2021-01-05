@@ -56,6 +56,7 @@ def create_entry(
             subject=subject,
             email_timeout=email_timeout,
             group=commons.Group(name=group_name, enabled=True),
+            dummy=True,
         )
         dbm.create_entry(entry)
         logger.info(f"Creating entry {entry}")
@@ -75,7 +76,7 @@ def load_csv_table(table: str):
     df: typing.Optional[pandas.DataFrame] = pandas.read_csv(table)
 
     # parse other columns
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
         create_entry(
             pvname=row["PV"],
             emails=row["emails"],
