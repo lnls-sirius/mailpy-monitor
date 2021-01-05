@@ -1,5 +1,4 @@
-Mailpy
-======
+# Mailpy
 
 Python app that monitors PVs EPICS, check their specified operation values and send an e-mail to a list of targets with a warning message if the PV value exceed its limits.
 
@@ -10,11 +9,18 @@ address.
 
 ## Deploy
 
-Environment varibles
+Environment varibles:
 
 | ENV    | Default                             | Desc                      |
 | ------ | ----------------------------------- | ------------------------- |
 | DB_URL | mongodb://localhost:27017/mailpy-db | MongoDB connection string |
+
+Secrets:
+
+| Name                | Desc                             |
+| ------------------- | -------------------------------- |
+| ALERT_MAIL_PASSWORD | Email password                   |
+| ALERT_MAIL_LOGIN    | Email used to send notifications |
 
 ## Development
 
