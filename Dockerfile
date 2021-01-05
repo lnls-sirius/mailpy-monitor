@@ -51,6 +51,6 @@ USER mailpy
 
 WORKDIR /home/mailpy/mailpy
 
-ENV DB_URL mongodb://localhost:27017/mailpy-db
+ENV MONGODB_URI mongodb://localhost:27017/mailpy-db
 
 ENTRYPOINT /bin/bash entrypoint.sh

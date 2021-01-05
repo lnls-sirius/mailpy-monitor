@@ -5,4 +5,4 @@ conda activate
 set -x
 python run.py -p "$(cat /run/secrets/ALERT_MAIL_PASSWORD)" \
     --login "$(cat /run/secrets/ALERT_MAIL_LOGIN)" \
-    --db_url "${DB_URL}"
+    --db_url "${MONGODB_URI}"
