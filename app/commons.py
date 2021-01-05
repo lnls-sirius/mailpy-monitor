@@ -124,6 +124,14 @@ class Group:
         return {"name": self.name, "enabled": self.enabled}
 
 
+class DummyPV:
+    def __init__(self, pvname):
+        self.pvname = pvname
+
+    def __str__(self):
+        return f"<DummyPV pvname={self.pvname}>"
+
+
 class Entry:
     """
     Encapsulates a PV and the email logic associated with it
@@ -180,6 +188,8 @@ class Entry:
             # The last action is to create a PV
             self.pv: epics.PV = epics.PV(pvname=pvname.strip())
             self.pv.add_callback(self.check_alarms)
+        else:
+            self.pv = DummyPV(pvname=pvname.strip())
 
     def as_dict(self):
         return {
