@@ -213,7 +213,7 @@ class SMSApp:
 
     def start(self):
         # self.main_thread.start()
-        for i in range(self.main_thread_executor_workers):
+        for _ in range(self.main_thread_executor_workers):
             self.main_thread_executor.submit(self.do_main_action)
         self.main_thread_executor.shutdown(wait=False)
 
