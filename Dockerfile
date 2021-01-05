@@ -53,14 +53,4 @@ WORKDIR /home/mailpy/mailpy
 
 ENV DB_URL mongodb://localhost:27017/mailpy-db
 
-CMD /bin/bash -c '\
-set -e;\
-source /opt/conda/etc/profile.d/conda.sh;\
-conda activate;\
-set -x;\
-python entrypoint.py\
-    -p "$(cat /run/secrets/ALERT_MAIL_PASSWORD)"\
-    --login "$(cat /run/secrets/ALERT_MAIL_LOGIN)"\
-    --db_url "${DB_URL}"\
-\'
-
+ENTRYPOINT /bin/bash entrypoint.sh
