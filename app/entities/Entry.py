@@ -1,127 +1,21 @@
-import time
+import multiprocessing
+import threading
 import typing
-import epics
+import time
 import logging
 import queue
-import threading
-import multiprocessing
-
-logger = logging.getLogger("COMMONS")
 
 
-class Condition(object):
-    """ Alarm  conditions """
+import epics
 
-    OutOfRange = "out of range"
-    SuperiorThan = "superior than"
-    InferiorThan = "inferior than"
-    IncreasingStep = "increasing step"
-    DecreasingStep = "decreasing step"
+from .Group import Group
+from .Condition import Condition
+from .EmailEvent import EmailEvent
 
-    @staticmethod
-    def get_conditions() -> typing.List:
-        return [
-            {
-                "name": Condition.OutOfRange,
-                "desc": "Must remain within the specified range.",
-            },
-            {"name": Condition.SuperiorThan, "desc": "Must remain superior than."},
-            {"name": Condition.InferiorThan, "desc": "Must remain inferior than."},
-            {
-                "name": Condition.IncreasingStep,
-                "desc": "Each increasing step triggers an alarm.",
-            },
-            {
-                "name": Condition.DecreasingStep,
-                "desc": "Each decreasing step triggers an alarm.",
-            },
-        ]
+from app.helpers import EntryException
 
 
-class ConfigType(object):
-    """ IOC command types """
-
-    SetSMSState = 0
-    SetGroupState = 1
-
-    GetSMSState = 2
-    GetGroupState = 3
-
-
-class EntryException(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-
-class ConfigEvent:
-    """ Configuration event sent by the IOC to the SMS queue """
-
-    def __init__(
-        self,
-        config_type: int,
-        value=None,
-        pv_name: str = None,
-    ):
-        self.config_type = config_type
-        self.value = value
-        self.pv_name = pv_name
-
-    def __str__(self):
-        return f"<ConfigEvent={self.config_type} value={self.value}>"
-
-
-class EmailEvent:
-    """ Email event sent by entry to the SMS queue to signal alarms """
-
-    def __init__(
-        self,
-        pvname,
-        specified_value_message,
-        unit,
-        subject,
-        emails,
-        warning,
-        condition,
-        value_measured,
-    ):
-        self.pvname = pvname
-        self.specified_value_message = (
-            specified_value_message  # String representing the specified value
-        )
-        self.unit = unit
-        self.subject = subject
-        self.emails = emails
-        self.warning = warning
-        self.condition = condition
-        self.value_measured = value_measured
-
-    def __str__(self):
-        return f"<EmailEvent {self.pvname} {self.specified_value_message} {self.subject} {self.emails} {self.warning}>"
-
-
-class Group:
-    """ Group of PVs """
-
-    def __init__(self, name: str, enabled: bool = True):
-        self.name: str = name
-        self._enabled: bool = enabled
-        self.lock = threading.RLock()
-
-    @property
-    def enabled(self):
-        with self.lock:
-            return self._enabled
-
-    @enabled.setter
-    def enabled(self, value: bool):
-        with self.lock:
-            self._enabled = value
-
-    def __str__(self):
-        return f'<Group="{self.name}" enabled={self.enabled}>'
-
-    def as_dict(self):
-        return {"name": self.name, "enabled": self.enabled}
+logger = logging.getLogger()
 
 
 class DummyPV:
@@ -165,6 +59,8 @@ class Entry:
         self.group = group
         self.lock = threading.RLock()
         self.sms_queue = sms_queue
+        self._dummy = dummy
+        self._pvname = pvname
 
         self.step_level: int = 0  # Actual level
         self.step_values: typing.List[float] = []  # Step value according to level
@@ -184,12 +80,13 @@ class Entry:
             # @todo: Condition.DecreasingStep condition not supported
             raise EntryException(f"Invalid condition {self.condition} for entry {self}")
 
-        if not dummy:
+    def connect(self):
+        if not self._dummy:
             # The last action is to create a PV
-            self.pv: epics.PV = epics.PV(pvname=pvname.strip())
+            self.pv: epics.PV = epics.PV(pvname=self._pvname.strip())
             self.pv.add_callback(self.check_alarms)
         else:
-            self.pv = DummyPV(pvname=pvname.strip())
+            self.pv = DummyPV(pvname=self._pvname.strip())
 
     def as_dict(self):
         return {

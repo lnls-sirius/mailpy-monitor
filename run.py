@@ -6,8 +6,6 @@ import yaml
 
 import app
 import app.sms
-import app.ioc
-import app.commons
 
 if __name__ == "__main__":
     with open("app/logging.yaml", "r") as f:

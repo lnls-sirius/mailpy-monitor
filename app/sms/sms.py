@@ -7,16 +7,18 @@ import queue
 import time
 import typing
 import concurrent.futures
-from time import localtime, strftime
 
 import smtplib
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from . import commons
-from . import db
-from . import (
+import app.entities as entities
+import app.helpers as helpers
+from .message import compose_msg_content
+
+from app.db import make_db
+from app import (
     ENABLE_STS,
     SMS_ENABLE_PV_STS,
     SMS_PREFIX,
@@ -43,8 +45,8 @@ class SMSApp:
         self.ioc_queue = ioc_queue
         self.sms_queue = sms_queue
 
-        self.entries: typing.Dict[str, commons.Entry] = {}
-        self.groups: typing.Dict[str, commons.Group] = {}
+        self.entries: typing.Dict[str, entities.Entry] = {}
+        self.groups: typing.Dict[str, entities.Group] = {}
         self.tls: bool = tls
         self.login: str = login
         self.passwd: str = passwd
@@ -52,7 +54,7 @@ class SMSApp:
         self.enable: bool = True
         self.running: bool = True
 
-        self.db = db.DBManager(url=db_url)
+        self.db = make_db(url=db_url)
 
         self.main_thread_executor_workers = 5
         self.main_thread_executor = concurrent.futures.ThreadPoolExecutor(
@@ -71,7 +73,7 @@ class SMSApp:
             # Create group if needed
             group_name = d_entry["group"]
             if group_name not in self.groups:
-                self.groups[group_name] = commons.Group(name=group_name, enabled=True)
+                self.groups[group_name] = entities.Group(name=group_name, enabled=True)
                 logger.info(f"Creating group {self.groups[group_name]}")
 
             try:
@@ -80,14 +82,16 @@ class SMSApp:
                     "group", None
                 )  # Remove the group name as we are using the object
 
-                self.entries[_id] = commons.Entry(
+                entry = entities.Entry(
                     group=self.groups[group_name], sms_queue=self.sms_queue, **d_entry
                 )
+                entry.connect()
+                self.entries[_id] = entry
                 logger.info(f"Creating entry {self.entries[_id]}")
-            except commons.EntryException:
+            except helpers.EntryException:
                 logger.exception("Failed to create entry")
 
-    def compose_msg(self, event: commons.EmailEvent) -> MIMEMultipart:
+    def compose_msg(self, event: entities.EmailEvent) -> MIMEMultipart:
         """
         :param commons.EmailEvent event: Message content
         :return: body of the e-mail that will be sent
@@ -99,35 +103,7 @@ class SMSApp:
         msg["Bcc"] = ""
         msg["Subject"] = event.subject
 
-        timestamp = strftime("%a, %d %b %Y %H:%M:%S", localtime())
-
-        # creating the plain-text format of the message
-        text = f"""{event.warning}\n
-     - PV name:         {event.pvname}
-     - Specified range: {event.specified_value_message}
-     - Value measured:  {event.value_measured} {event.unit}
-     - Timestamp:       {timestamp}
-
-     Archiver link: https://10.0.38.42
-
-     Controls Group\n"""
-
-        html = f"""\
-        <html>
-            <body>
-                <p> {event.warning} <br>
-                    <ul>
-                        <li><b>PV name:         </b> {event.pvname} <br></li>
-                        <li><b>Specified range: </b> {event.specified_value_message}<br></li>
-                        <li><b>Value measured:  </b> {event.value_measured} {event.unit}<br></li>
-                        <li><b>Timestamp:       </b> {timestamp}<br></li>
-                    </ul>
-                    Archiver link: <a href="https://10.0.38.42">https://10.0.38.42<a><br><br>
-                    Controls Group
-                </p>
-            </body>
-        </html>
-        """
+        text, html = compose_msg_content(event)
 
         text_part = MIMEText(text, "plain")
         html_part = MIMEText(html, "html")
@@ -137,7 +113,7 @@ class SMSApp:
         msg.attach(html_part)
         return msg
 
-    def send_email(self, event: commons.EmailEvent, msg: MIMEMultipart):
+    def send_email(self, event: entities.EmailEvent, msg: MIMEMultipart):
         """
         Send an email
         :param commons.EmailEvent event: Email content specifics
@@ -249,24 +225,24 @@ class SMSApp:
                 logger.warning('SMS is disabled (PV "CON:MailServer:Enable" is zero)')
                 continue
 
-            if type(event) == commons.EmailEvent:
+            if type(event) == entities.EmailEvent:
                 # Send an email
                 message = self.compose_msg(event)
                 self.send_email(event, message)
 
-            elif type(event) == commons.ConfigEvent:
+            elif type(event) == entities.ConfigEvent:
                 self.handle_config(event)
 
             else:
                 logger.warning(f"Unknown event type {event} obtained from queue.")
 
-    def handle_config(self, event: commons.ConfigEvent):
+    def handle_config(self, event: entities.ConfigEvent):
         """
         Handle configuration changes.
         :param commons.ConfigEvent event: Configuration event.
         """
         try:
-            if event.config_type == commons.ConfigType.SetSMSState:
+            if event.config_type == entities.ConfigType.SetSMSState:
                 self.enable = True if event.value else False
 
                 self.ioc_queue.put(
@@ -277,14 +253,14 @@ class SMSApp:
                 )
                 logger.info(f"SMS status enable={self.enable}")
 
-            elif event.config_type == commons.ConfigType.GetSMSState:
+            elif event.config_type == entities.ConfigType.GetSMSState:
                 self.ioc_queue.put(
                     {"reason": event.pv_name, "value": 1 if self.enable else 0}
                 )
 
             elif (
-                event.config_type == commons.ConfigType.SetGroupState
-                or event.config_type == commons.ConfigType.GetGroupState
+                event.config_type == entities.ConfigType.SetGroupState
+                or event.config_type == entities.ConfigType.GetGroupState
             ):
                 group_name = event.pv_name
                 if group_name not in self.groups:
@@ -294,9 +270,9 @@ class SMSApp:
                     )
                     return
 
-                group: commons.Group = self.groups[group_name]
+                group: entities.Group = self.groups[group_name]
 
-                if event.config_type == commons.ConfigType.SetGroupState:
+                if event.config_type == entities.ConfigType.SetGroupState:
 
                     group.enabled = True if event.value else False
                     self.ioc_queue.put(
@@ -307,7 +283,7 @@ class SMSApp:
                     )
                     logger.info(f"Group {group} enabled={event.value}")
 
-                elif event.config_type == commons.ConfigType.GetGroupState:
+                elif event.config_type == entities.ConfigType.GetGroupState:
 
                     self.ioc_queue.put(
                         {
