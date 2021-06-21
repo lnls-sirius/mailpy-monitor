@@ -1,9 +1,9 @@
 import multiprocessing
 
 SMS_MAX_QUEUE_SIZE = 50000
-SMS_QUEUE = multiprocessing.Queue(maxsize=SMS_MAX_QUEUE_SIZE)
-IOC_MAX_QUEUE_SIZE = 50000
-IOC_QUEUE = multiprocessing.Queue(maxsize=IOC_MAX_QUEUE_SIZE)
+SMS_QUEUE: multiprocessing.queues.Queue = multiprocessing.Queue(
+    maxsize=SMS_MAX_QUEUE_SIZE
+)
 
 STS = "-Sts"
 SEL = "-Sel"
