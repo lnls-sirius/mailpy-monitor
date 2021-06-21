@@ -10,7 +10,7 @@ logger = logging.getLogger("COMMONS")
 
 
 class Condition(object):
-    """ Alarm  conditions """
+    """Alarm  conditions"""
 
     OutOfRange = "out of range"
     SuperiorThan = "superior than"
@@ -39,7 +39,7 @@ class Condition(object):
 
 
 class ConfigType(object):
-    """ IOC command types """
+    """IOC command types"""
 
     SetSMSState = 0
     SetGroupState = 1
@@ -54,7 +54,7 @@ class EntryException(Exception):
 
 
 class ConfigEvent:
-    """ Configuration event sent by the IOC to the SMS queue """
+    """Configuration event sent by the IOC to the SMS queue"""
 
     def __init__(
         self,
@@ -71,7 +71,7 @@ class ConfigEvent:
 
 
 class EmailEvent:
-    """ Email event sent by entry to the SMS queue to signal alarms """
+    """Email event sent by entry to the SMS queue to signal alarms"""
 
     def __init__(
         self,
@@ -100,7 +100,7 @@ class EmailEvent:
 
 
 class Group:
-    """ Group of PVs """
+    """Group of PVs"""
 
     def __init__(self, name: str, enabled: bool = True):
         self.name: str = name
@@ -186,7 +186,7 @@ class Entry:
 
         if not dummy:
             # The last action is to create a PV
-            self.pv: epics.PV = epics.PV(pvname=pvname.strip())
+            self.pv = epics.PV(pvname=pvname.strip())
             self.pv.add_callback(self.check_alarms)
         else:
             self.pv = DummyPV(pvname=pvname.strip())
@@ -268,7 +268,7 @@ class Entry:
     def __str__(self):
         return f'<Entry={self._id} pvname="{self.pv.pvname if self.pv else None}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
 
-    def find_next_level(self, value) -> int:
+    def _find_next_level(self, value) -> int:
         loop_level = 0
         for step_value in self.step_values:
             # Locate the next level we belong
@@ -276,6 +276,7 @@ class Entry:
                 # If the value is lesser than the next level beginning, we found our current level
                 return loop_level
             loop_level += 1
+        return loop_level
 
     def handle_condition(self, value) -> typing.Optional[EmailEvent]:
         """
@@ -301,7 +302,7 @@ class Entry:
             next_step_limiar = self.step_values[self.step_level]
             if value >= next_step_limiar and (self.step_level + 1) <= self.max_level:
                 # We are going up levels
-                loop_level = self.find_next_level(value)
+                loop_level = self._find_next_level(value)
                 self.step_level = loop_level
                 specified_value_message = f"lower than {self.step_values[0]}{self.unit}"
 
@@ -319,7 +320,7 @@ class Entry:
                 and value < self.step_values[self.step_level - 1]
             ):
                 # Going down levels
-                loop_level = self.find_next_level(value)
+                loop_level = self._find_next_level(value)
                 logger.info(
                     f"{self} going down from level {self.step_level} to {loop_level}"
                 )
@@ -348,7 +349,7 @@ class Entry:
             return event
 
     def trigger(self):
-        """ Manual trigger """
+        """Manual trigger"""
         self.check_alarms(value=self.pv.value)
 
     def check_alarms(self, **kwargs):
