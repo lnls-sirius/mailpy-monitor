@@ -113,10 +113,10 @@ class Dispatcher:
             if self._tls:
                 # Start an unsecured SMTP connection and then encrypt it.
                 # Gmail SMTP server requires a connection with port 587 if using .starttls()
-                port = 587
+                PORT = 587
                 # Create a secure SSL context
                 # try to log in to server and send email
-                with smtplib.SMTP("smtp.gmail.com", port) as server:
+                with smtplib.SMTP("smtp.gmail.com", PORT) as server:
                     server.ehlo()
                     server.starttls(context=context)
                     server.ehlo()
@@ -126,9 +126,9 @@ class Dispatcher:
             else:
                 # Start a secured SMTP connection from the beginning.
                 # Gmail SMTP server requires a connection with port 465 if using SMTP_SSL()
-                port = 465
+                PORT = 465
                 with smtplib.SMTP_SSL(
-                    "smtp.gmail.com", port, context=context
+                    "smtp.gmail.com", PORT, context=context
                 ) as server:
                     server.login(self._login, self._passwd)
                     server.sendmail(self._login, email, msg.as_string())

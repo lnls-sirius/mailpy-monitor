@@ -33,24 +33,27 @@ class DBManager:
         self.connect()
 
     def disconnect(self):
-        """ Disconnect """
+        """Disconnect"""
         if self.client:
             self.client.close()
 
     def connect(self):
-        """ Estabilish mongo connection """
+        """Estabilish mongo connection"""
         self.client = pymongo.MongoClient(self.url)
         self.mailpy_db: pymongo.database.Database = self.client[DBManager.DB_NAME]
 
     def get_entries(self):
-        """ Return all entries """
+        """Return all entries"""
         entries: pymongo.collection.Collection = self.mailpy_db[
             DBManager.ENTRIES_COLLECTION
         ]
         return [e for e in entries.find()]
 
     def create_entry(self, entry: commons.Entry):
-        """ Create an entry """
+        """Create an entry"""
+        if not self.mailpy_db:
+            raise RuntimeError("Database not initialised")
+
         if not entry.group:
             logger.warning(f"Invalid group for entry {entry}")
             return
@@ -72,13 +75,17 @@ class DBManager:
         logger.info(f"Inserted entry {entry} id {result}")
 
     def get_group(self, group_name: str) -> typing.Optional[str]:
+        if not self.mailpy_db:
+            raise RuntimeError("Database not initialised")
         groups: pymongo.collection.Collection = self.mailpy_db[
             DBManager.GROUPS_COLLECTION
         ]
         return groups.find_one({"_id": group_name})
 
     def create_group(self, group: commons.Group):
-        """ Create a group """
+        """Create a group"""
+        if not self.mailpy_db:
+            raise RuntimeError("Database not initialised")
         groups: pymongo.collection.Collection = self.mailpy_db[
             DBManager.GROUPS_COLLECTION
         ]
@@ -91,14 +98,20 @@ class DBManager:
         logger.info(f"Inserted group {group} id {result}")
 
     def get_condition(self, name: str):
-        """ Get a condtion by name """
+        """Get a condtion by name"""
+        if not self.mailpy_db:
+            raise RuntimeError("Database not initialised")
+
         conditions: pymongo.collection.Collection = self.mailpy_db[
             DBManager.CONDITIONS_COLLECTION
         ]
         return conditions.find_one({"name": name})
 
     def initialize_conditions(self):
-        """ Initialize the conditions collection using the supported ones from commons.Condition """
+        """Initialize the conditions collection using the supported ones from commons.Condition"""
+        if not self.mailpy_db:
+            raise RuntimeError("Database not initialised")
+
         self.mailpy_db.drop_collection(DBManager.CONDITIONS_COLLECTION)
 
         conditions: pymongo.collection.Collection = self.mailpy_db[

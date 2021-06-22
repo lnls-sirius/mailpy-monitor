@@ -26,36 +26,37 @@ class SMSApp:
         sms_queue: multiprocessing.Queue,
         db_url: str,
     ):
-        self.sms_queue = sms_queue
+        self._sms_queue = sms_queue
 
-        self.entries: typing.Dict[str, commons.Entry] = {}
-        self.groups: typing.Dict[str, commons.Group] = {}
-        self.tick: float = 15
-        self.enable: bool = True
-        self.running: bool = True
+        self._entries: typing.Dict[str, commons.Entry] = {}
+        self._groups: typing.Dict[str, commons.Group] = {}
 
-        self.db = db.DBManager(url=db_url)
-        self.sms_dispatcher = mail.Dispatcher(login, passwd, tls)
+        self._tick: float = 15
+        self._enable: bool = True
+        self._running: bool = True
 
-        self.main_thread_executor_workers = 5
-        self.main_thread_executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.main_thread_executor_workers,
+        self._db = db.DBManager(url=db_url)
+        self._sms_dispatcher = mail.Dispatcher(login, passwd, tls)
+
+        self._main_thread_executor_workers = 5
+        self._main_thread_executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=self._main_thread_executor_workers,
             thread_name_prefix="SMSAction",
         )
-        self.tick_thread = threading.Thread(
+        self._tick_thread = threading.Thread(
             daemon=False, target=self.do_tick, name="SMS Tick"
         )
 
     def load_from_database(self):
         """Load entries from database"""
-        dict_entries = self.db.get_entries()
+        dict_entries = self._db.get_entries()
         for d_entry in dict_entries:
 
             # Create group if needed
             group_name = d_entry["group"]
-            if group_name not in self.groups:
-                self.groups[group_name] = commons.Group(name=group_name, enabled=True)
-                logger.info(f"Creating group {self.groups[group_name]}")
+            if group_name not in self._groups:
+                self._groups[group_name] = commons.Group(name=group_name, enabled=True)
+                logger.info(f"Creating group {self._groups[group_name]}")
 
             try:
                 _id = d_entry["_id"]
@@ -63,29 +64,29 @@ class SMSApp:
                     "group", None
                 )  # Remove the group name as we are using the object
 
-                self.entries[_id] = commons.Entry(
-                    group=self.groups[group_name], sms_queue=self.sms_queue, **d_entry
+                self._entries[_id] = commons.Entry(
+                    group=self._groups[group_name], sms_queue=self._sms_queue, **d_entry
                 )
-                logger.info(f"Creating entry {self.entries[_id]}")
+                logger.info(f"Creating entry {self._entries[_id]}")
             except commons.EntryException:
                 logger.exception("Failed to create entry")
 
     def start(self):
-        for _ in range(self.main_thread_executor_workers):
-            self.main_thread_executor.submit(self.do_main_action)
-        self.main_thread_executor.shutdown(wait=False)
+        for _ in range(self._main_thread_executor_workers):
+            self._main_thread_executor.submit(self.do_main_action)
+        self._main_thread_executor.shutdown(wait=False)
 
-        self.tick_thread.start()
+        self._tick_thread.start()
 
     def join(self):
-        self.tick_thread.join()
+        self._tick_thread.join()
 
     def do_tick(self):
         """Trigger Entry processing"""
-        while self.running:
-            time.sleep(self.tick)
-            for entry in self.entries.values():
-                if not self.running:
+        while self._running:
+            time.sleep(self._tick)
+            for entry in self._entries.values():
+                if not self._running:
                     break
                 entry.trigger()
 
@@ -93,24 +94,24 @@ class SMSApp:
         """
         Application loop: Check email targets
         """
-        if not self.sms_dispatcher.authenticate_account():
+        if not self._sms_dispatcher.authenticate_account():
             logger.fatal(
                 "Failed to authenticate gmail mail account. SMS program shut down"
             )
-            self.running = False
+            self._running = False
             return
 
-        while self.running:
-            event = self.sms_queue.get(block=True, timeout=None)
+        while self._running:
+            event = self._sms_queue.get(block=True, timeout=None)
 
-            if not self.enable:
-                logger.warning('SMS is disabled (PV "CON:MailServer:Enable" is zero)')
+            if not self._enable:
+                logger.warning("SMS is disabled")
                 continue
 
             if type(event) == commons.EmailEvent:
                 # Send an email
-                message = self.sms_dispatcher.compose_msg(event)
-                self.sms_dispatcher.send_email(event, message)
+                message = self._sms_dispatcher.compose_msg(event)
+                self._sms_dispatcher.send_email(event, message)
 
             elif type(event) == commons.ConfigEvent:
                 self.handle_config(event)
@@ -125,8 +126,8 @@ class SMSApp:
         """
         try:
             if event.config_type == commons.ConfigType.SetSMSState:
-                self.enable = True if event.value else False
-                logger.info(f"SMS status enable={self.enable}")
+                self._enable = True if event.value else False
+                logger.info(f"SMS status enable={self._enable}")
 
             elif event.config_type == commons.ConfigType.GetSMSState:
                 pass
@@ -136,14 +137,14 @@ class SMSApp:
                 or event.config_type == commons.ConfigType.GetGroupState
             ):
                 group_name = event.pv_name
-                if group_name not in self.groups:
+                if group_name not in self._groups:
                     # Invalid group
                     logger.warning(
                         f"Failed to handle {event}, {group_name} is not a valid group"
                     )
                     return
 
-                group: commons.Group = self.groups[group_name]
+                group: commons.Group = self._groups[group_name]
 
                 if event.config_type == commons.ConfigType.SetGroupState:
 
