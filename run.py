@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+import argparse
 import logging
 import logging.config
-import argparse
+
 import yaml
 
 import app
-import app.sms
 import app.commons
+import app.sms
 
 if __name__ == "__main__":
     with open("app/logging.yaml", "r") as f:

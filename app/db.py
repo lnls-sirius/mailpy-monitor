@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import typing
 import logging
 import threading
+import typing
 
 import pymongo
-import pymongo.database
 import pymongo.collection
+import pymongo.database
 
 from . import commons
 

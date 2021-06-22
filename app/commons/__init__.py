@@ -1,3 +1,4 @@
+from .entities import Entry, Group
 from .event import ConfigEvent, EmailEvent
-from .entities import Group, Entry
+from .exception import EntryException
 from .type import ConfigType

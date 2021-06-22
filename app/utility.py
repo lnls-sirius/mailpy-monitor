@@ -1,11 +1,11 @@
 import logging
 import os
-import pandas
-import pymongo
 import typing
 
-from . import commons
-from . import db
+import pandas
+import pymongo
+
+from . import commons, db
 
 logger = logging.getLogger()
 

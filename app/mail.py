@@ -1,13 +1,11 @@
 import logging
-import ssl
-from time import localtime, strftime
-
 import smtplib
-
+import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from . import commons
+from time import localtime, strftime
 
+from . import commons
 
 logger = logging.getLogger(__name__)
 

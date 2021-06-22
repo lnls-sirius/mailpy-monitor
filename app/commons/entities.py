@@ -1,14 +1,15 @@
-import time
-import typing
-import epics
 import logging
+import multiprocessing
 import queue
 import threading
-import multiprocessing
+import time
+import typing
+
+import epics
 
 from .condition import Condition as _Condition
-from .exception import EntryException as _EntryException
 from .event import EmailEvent as _EmailEvent
+from .exception import EntryException as _EntryException
 
 logger = logging.getLogger("COMMONS")
 
