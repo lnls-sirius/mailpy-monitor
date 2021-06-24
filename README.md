@@ -1,5 +1,5 @@
-SMS: Spam Mailing Service
-============================================================
+# Mailpy
+
 Python app that monitors PVs EPICS, check their specified operation values and send an e-mail to a list of targets with a warning message if the PV value exceed its limits.
 
 This code reads a list of EPICS PVs and their corresponding specified values
@@ -7,16 +7,23 @@ from a MongoDB and monitor them. If any these PVs is not in it's specified
 value, an e-mail is sent with a warning message to one or a list of e-mail
 address.
 
-Deploy
-------
-Environment varibles
+## Deploy
 
-|ENV| Default | Desc |
-|---|---------|------|
-|DB_URL|mongodb://localhost:27017/mailpy-db|MongoDB connection string|
+Environment varibles:
 
-Development
------------
+| ENV         | Default                             | Desc                      |
+| ----------- | ----------------------------------- | ------------------------- |
+| MONGODB_URI | mongodb://localhost:27017/mailpy-db | MongoDB connection string |
+
+Secrets:
+
+| Name                | Desc                             |
+| ------------------- | -------------------------------- |
+| ALERT_MAIL_PASSWORD | Email password                   |
+| ALERT_MAIL_LOGIN    | Email used to send notifications |
+
+## Development
+
 Install **pre-commit** !
 
 ### To do:
@@ -26,11 +33,11 @@ Install **pre-commit** !
     - Consider creating an "user" collection (MongoDB)
     - Consider removing the IOC, access only via the API
 
-Usage
------
+## Usage
 
 ### Include new entries
-One could use the rest API and the front-end or by using the `app/utility.py` scripts.
+
+One could use the rest API and the front-end or use `scripts/*.py`.
 
 Start an interactive python session at the project root:
 
@@ -57,10 +64,9 @@ app.utility.disconnect()
     - separate specified value with colon (":")
         e.g.:
 
-
-| Conditions    | Description  |Syntax                |
-|---------------|--------------|----------------------|
-|out of range   |              |"17:22"               |
-|increasing step|              |"1.0:1.5:2.0:2.5:3.0" |
-|superior than  |              |"42"                  |
-|inferior than  |              |"46"                  |
+| Conditions      | Description | Syntax                |
+| --------------- | ----------- | --------------------- |
+| out of range    |             | "17:22"               |
+| increasing step |             | "1.0:1.5:2.0:2.5:3.0" |
+| superior than   |             | "42"                  |
+| inferior than   |             | "46"                  |

@@ -1,11 +1,11 @@
 import logging
 import os
-import pandas
-import pymongo
 import typing
 
-from . import commons
-from . import db
+import pandas
+import pymongo
+
+from . import commons, db
 
 logger = logging.getLogger()
 
@@ -23,11 +23,13 @@ def disconnect():
     if dbm:
         dbm.disconnect()
 
+
 def initialize_conditions():
-    """ Initialize the conditions collection using the supported ones from commons.Condition """
+    """Initialize the conditions collection using the supported ones from commons.Condition"""
     global dbm
     if dbm:
         dbm.initialize_conditions()
+
 
 def create_entry(
     pvname: str,
@@ -41,7 +43,10 @@ def create_entry(
     group_name: str,
 ):
     global dbm
-    entry: commons.Entry = None
+    entry: typing.Optional[commons.Entry] = None
+    if not dbm:
+        raise RuntimeError("Database not initialised")
+
     try:
         entry = commons.Entry(
             sms_queue=None,
@@ -54,6 +59,7 @@ def create_entry(
             subject=subject,
             email_timeout=email_timeout,
             group=commons.Group(name=group_name, enabled=True),
+            dummy=True,
         )
         dbm.create_entry(entry)
         logger.info(f"Creating entry {entry}")
@@ -66,14 +72,14 @@ def create_entry(
 
 
 def load_csv_table(table: str):
-    """ Populate the database from a csv file. Initial migration. """
+    """Populate the database from a csv file. Initial migration."""
     if not os.path.isfile(table):
         raise ValueError(f'Failed to load csv data. File "{table}" does not exist')
 
     df: typing.Optional[pandas.DataFrame] = pandas.read_csv(table)
 
     # parse other columns
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
         create_entry(
             pvname=row["PV"],
             emails=row["emails"],

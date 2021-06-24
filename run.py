@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
+import argparse
 import logging
 import logging.config
-import argparse
+
 import yaml
-import typing
-import multiprocessing
 
 import app
-import app.sms
-import app.ioc
 import app.commons
+import app.sms
 
 if __name__ == "__main__":
     with open("app/logging.yaml", "r") as f:
@@ -55,27 +53,9 @@ if __name__ == "__main__":
         login=args.login,
         passwd=args.passwd,
         sms_queue=app.SMS_QUEUE,
-        ioc_queue=app.IOC_QUEUE,
         db_url=args.db_url,
     )
 
     sms_app.load_from_database()
     sms_app.start()
-
-    groups: typing.Dict[str, int] = {}
-    for k, v in sms_app.groups.items():
-        groups[k] = v.enabled
-
-    ioc_process = multiprocessing.Process(
-        name="IOCProcess",
-        target=app.ioc.start_ioc,
-        kwargs={
-            "groups": groups,
-            "sms_queue": app.SMS_QUEUE,
-            "ioc_queue": app.IOC_QUEUE,
-        },
-        daemon=False,
-    )
-
-    ioc_process.start()
-    ioc_process.join()
+    sms_app.join()

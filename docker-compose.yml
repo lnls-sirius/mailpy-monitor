@@ -5,24 +5,13 @@ services:
     ports:
       - 27017:27017
 
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-
   sms:
     image: lnlscon/notification:v2.0
     build: .
     network_mode: host
     secrets:
-      - CONS2_SMS_PASSWD
-    volumes:
-      - ./SMS_LOGIN:/run/secrets/SMS_LOGIN
-      - ./SMS_PASSWORD:/run/secrets/SMS_PASSWORD
+      - ALERT_MAIL_PASSWORD
+      - ALERT_MAIL_LOGIN
     logging:
       driver: "json-file"
       options:
@@ -30,5 +19,7 @@ services:
         max-file: "10"
 
 secrets:
-  CONS2_SMS_PASSWD:
+  ALERT_MAIL_PASSWORD:
+    external: true
+  ALERT_MAIL_LOGIN:
     external: true
