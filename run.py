@@ -6,8 +6,6 @@ import logging.config
 import yaml
 
 import app
-import app.commons
-import app.sms
 
 if __name__ == "__main__":
     with open("app/logging.yaml", "r") as f:
@@ -48,11 +46,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # SMS
-    sms_app = app.sms.SMSApp(
+    sms_app = app.Manager(
         tls=args.tls,
         login=args.login,
         passwd=args.passwd,
-        sms_queue=app.SMS_QUEUE,
         db_url=args.db_url,
     )
 

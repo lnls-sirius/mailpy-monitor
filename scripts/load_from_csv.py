@@ -40,4 +40,3 @@ if __name__ == "__main__":
 
     # Disconnect
     logger.info("Operation finished")
-    app.utility.disconnect()
