@@ -3,10 +3,13 @@ import json
 import typing
 import dataclasses
 import docker.client
+import docker.models.containers
 
 from app.db import EntryData, GroupData
 
-RESOURCES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
+RESOURCES_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../resources"
+)
 
 
 @dataclasses.dataclass(frozen=True)

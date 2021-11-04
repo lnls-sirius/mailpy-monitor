@@ -2,7 +2,7 @@ import typing
 import unittest
 
 from app.db import EntryData, GroupData, make_db_manager, DBManager, create_mongodb_url
-from .utils import MongoContainerManager, MongoJsonLoader
+from app.utils import MongoContainerManager, MongoJsonLoader
 
 
 class TestDatabaseInteraction(unittest.TestCase):
