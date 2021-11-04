@@ -10,19 +10,25 @@ logger = logging.getLogger("DB")
 
 
 class DBConnector:
-    def __init__(self, url: str, db_name: str):
-        self.url = url
-        self.client: typing.Optional[pymongo.MongoClient] = None
-        self.db_name = db_name
-        self.db: typing.Optional[pymongo.database.Database] = None
+    def __init__(self, url: str):
+        self._url = url
+        self._client: typing.Optional[pymongo.MongoClient] = None
+        self._db: typing.Optional[pymongo.database.Database] = None
 
-    def disconnect(self):
-        """Disconnect"""
-        if self.client:
-            self.client.close()
+    def close(self):
+        if self._client:
+            self._client.close()
+            self._client = None
+        logger.info(f"Closing database connection {self._url}")
 
     def connect(self) -> pymongo.database.Database:
-        """Estabilish mongo connection"""
-        self.client = pymongo.MongoClient(self.url)
-        self.db = self.client[self.db_name]
+        self._client = pymongo.MongoClient(self._url)
+        self._db = self._client.get_database()
+        logger.info(f"Connecting to database {self._url}")
         return self.db
+
+    @property
+    def db(self):
+        if not self._client:
+            self.connect()
+        return self._client.get_database()

@@ -7,7 +7,7 @@ import typing
 
 import app.entities as entities
 import app.helpers as helpers
-from app.db import make_db
+from app.db import make_db_manager
 
 from .sms import MailService
 
@@ -26,7 +26,7 @@ class Manager:
         self.tick: float = 15
         self.running: bool = True
 
-        self.db = make_db(url=db_url)
+        self.db = make_db_manager(url=db_url)
         self.sms = MailService(login=login, passwd=passwd, tls=tls)
 
         self.main_thread_executor_workers = 1

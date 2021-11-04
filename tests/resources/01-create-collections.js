@@ -2,7 +2,6 @@ const conditions = "conditions";
 const groups = "groups";
 const entries = "entries";
 
-const collections = db.getCollectionNames();
 db.createCollection(conditions, {
   validator: {
     $jsonSchema: {

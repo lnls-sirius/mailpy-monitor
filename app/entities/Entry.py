@@ -56,7 +56,7 @@ class Entry:
         self,
         id: str,
         pvname: str,
-        emails: str,
+        emails: typing.List[str],
         condition: str,
         alarm_values: str,
         unit: str,
@@ -158,7 +158,7 @@ class Entry:
                     unit=self.unit,
                     warning=self.warning_message,
                     subject=self.subject,
-                    emails=self.emails.strip().split(";"),
+                    emails=self.emails,
                     condition=self.condition,
                     value_measured="{:.4}".format(value),
                 )

@@ -101,7 +101,9 @@ class MailService:
                 return
 
             self._server.sendmail(
-                self._login, event.emails, self._compose_msg(event).as_string()
+                from_addr=self._login,
+                to_addrs=event.emails,
+                msg=self._compose_msg(event).as_string(),
             )
             logger.info(f"Email sent with success, event {event}")
 

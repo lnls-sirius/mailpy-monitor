@@ -5,31 +5,22 @@ import typing
 import pymongo
 import pymongo.database
 
-from app.entities import ConditionEnums, Entry, Group
+from app.entities import ConditionEnums
 
 from .connector import DBConnector
 
 logger = logging.getLogger()
 
 
-class DBException(Exception):
-    """"""
-
-
-class DBManagerNotInitializedExeption(DBException):
-    """"""
-
-
-@dataclasses.dataclass
-class GroupData:
+# @dataclasses.dataclass
+class GroupData(typing.NamedTuple):
     id: str
     name: str
     enabled: bool
     description: str
 
 
-@dataclasses.dataclass
-class EntryData:
+class EntryData(typing.NamedTuple):
     id: str
     pvname: str
     emails: typing.List[str]
@@ -47,42 +38,50 @@ class DBManager:
     GROUPS_COLLECTION = "groups"
     ENTRIES_COLLECTION = "entries"
 
-    def __init__(self, db):
-        self.db: typing.Optional[pymongo.database.Database] = db
+    def __init__(self, connector: DBConnector):
+        self._connector: DBConnector = connector
+
+    @property
+    def db(self) -> pymongo.database.Database:
+        return self._connector.db
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._connector.close()
 
     def _parse_group(self, data: typing.Any) -> GroupData:
         return GroupData(
-            description=data["description"],
+            description=data.get("description", ""),
             enabled=bool(data["enabled"]),
             id=str(data["_id"]),
             name=data["name"],
         )
 
     def _parse_entry(self, data: typing.Any) -> EntryData:
-        id = str(data["id"])
-        del data["id"]
-
-        return EntryData(id=id, **data)
+        return EntryData(
+            id=str(data["_id"]),
+            pvname=data["pvname"],
+            emails=data["emails"].strip().split(":"),
+            condition=data["condition"],
+            alarm_values=data["alarm_values"],
+            unit=data["unit"],
+            warning_message=data["warning_message"],
+            subject=data["subject"],
+            email_timeout=data["email_timeout"],
+            group=data["group"],
+        )
 
     def get_entries(self) -> typing.List[EntryData]:
-        if not self.db:
-            raise DBManagerNotInitializedExeption()
-
         entries: pymongo.collection.Collection = self.db[DBManager.ENTRIES_COLLECTION]
         return [self._parse_entry(e) for e in entries.find()]
 
     def get_group(self, group_name: str) -> typing.Optional[GroupData]:
-        if not self.db:
-            raise DBManagerNotInitializedExeption()
-
         groups: pymongo.collection.Collection = self.db[DBManager.GROUPS_COLLECTION]
-
         return self._parse_group(groups.find_one({"name": group_name}))
 
     def get_condition(self, name: str):
-        if not self.db:
-            raise DBManagerNotInitializedExeption()
-
         conditions: pymongo.collection.Collection = self.db[
             DBManager.CONDITIONS_COLLECTION
         ]
@@ -102,6 +101,16 @@ class DBManager:
             logger.exception("Conditions were not initialized")
 
 
-def make_db(url: str = "mongodb://localhost:27017/", db_name: str = "mailpy-db"):
-    db = DBConnector(url, db_name).connect()
-    return DBManager(db)
+def create_mongodb_url(
+    db: str, host="localhost", user=None, password=None, port: int = 27017
+) -> str:
+    if user and password:
+        return f"mongodb://{user}:{password}@{host}:{port}/{db}"
+
+    return f"mongodb://{host}:{port}/{db}"
+
+
+def make_db_manager(url):
+    connector = DBConnector(url)
+    connector.connect()
+    return DBManager(connector)

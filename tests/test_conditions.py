@@ -33,17 +33,24 @@ class AlarmConditionTest(unittest.TestCase):
             with self.assertRaises(ConditionException):
                 create_condition(condition=condition_str, alarm_values=None)
 
+    def _create_condition(
+        self, condition_name: str, alarm_values: str, cls
+    ) -> Condition:
+        condition = create_condition(
+            condition=condition_name, alarm_values=alarm_values
+        )
+        self.assertIsInstance(condition, Condition)
+        self.assertIsInstance(condition, cls)
+        self.assertEqual(condition.alarm_values, alarm_values)
+        self.assertEqual(condition.name, condition_name)
+        return condition
+
     def test_increasing_step(self):
         alarm_values = "0:1:2:3"
-        condition: ConditionIncreasingStep = create_condition(
-            condition=ConditionEnums.IncreasingStep, alarm_values=alarm_values
+        condition: ConditionIncreasingStep = self._create_condition(
+            ConditionEnums.IncreasingStep, alarm_values, ConditionIncreasingStep
         )
-        self.assertEqual(condition.alarm_values, alarm_values)
-
-        self.assertIsInstance(condition, Condition)
-        self.assertIsInstance(condition, ConditionIncreasingStep)
         self.check_condition_inputs(condition)
-        self.assertEqual(condition.name, ConditionEnums.IncreasingStep)
 
         invalid_values = ["1:2:3:3", "0.12:-2", ":1:2", "1:1:2:3", "3:2.:1", "-2::3"]
         for alarm_value in invalid_values:
@@ -90,13 +97,9 @@ class AlarmConditionTest(unittest.TestCase):
 
     def test_inferior_than(self):
         alarm = 10
-        condition = create_condition(
-            condition=ConditionEnums.InferiorThan, alarm_values=str(alarm)
+        condition = self._create_condition(
+            ConditionEnums.InferiorThan, str(alarm), ConditionInferiorThan
         )
-        self.assertIsInstance(condition, Condition)
-        self.assertIsInstance(condition, ConditionInferiorThan)
-        self.assertEqual(condition.name, ConditionEnums.InferiorThan)
-        self.assertEqual(condition.alarm_values, str(alarm))
         self.check_condition_inputs(condition)
 
         self.assertIsNone(condition.check_alarm(alarm))
@@ -106,13 +109,9 @@ class AlarmConditionTest(unittest.TestCase):
 
     def test_superior_than(self):
         alarm = 10
-        condition = create_condition(
-            condition=ConditionEnums.SuperiorThan, alarm_values=str(alarm)
+        condition = self._create_condition(
+            ConditionEnums.SuperiorThan, str(alarm), ConditionSuperiorThan
         )
-        self.assertEqual(condition.alarm_values, str(alarm))
-        self.assertIsInstance(condition, Condition)
-        self.assertIsInstance(condition, ConditionSuperiorThan)
-        self.assertEqual(condition.name, ConditionEnums.SuperiorThan)
         self.check_condition_inputs(condition)
 
         self.assertIsNone(condition.check_alarm(alarm))
@@ -124,15 +123,11 @@ class AlarmConditionTest(unittest.TestCase):
         alarm_max = 153
         alarm_str = f"{alarm_min}:{alarm_max}"
 
-        condition = create_condition(
-            condition=ConditionEnums.OutOfRange, alarm_values=alarm_str
+        condition = self._create_condition(
+            ConditionEnums.OutOfRange, alarm_str, ConditionOutOfRange
         )
-        self.assertEqual(condition.alarm_values, alarm_str)
-        self.assertEqual(condition.name, ConditionEnums.OutOfRange)
         self.check_condition_inputs(condition)
 
-        self.assertIsInstance(condition, Condition)
-        self.assertIsInstance(condition, ConditionOutOfRange)
         self.assertIsNone(condition.check_alarm(alarm_min))
         self.assertIsNone(condition.check_alarm(alarm_max))
         self.assertIsNone(condition.check_alarm(alarm_min + 1))

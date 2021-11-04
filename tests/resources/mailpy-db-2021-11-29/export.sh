@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ex
-CONNECTION_STR="mongodb://user:password@host:port/db_name"
+CONNECTION_STR="mongodb://mailpyadmin:2021MailPy7391@db:27017/mailpy-db"
 COLLECTIONS=$(mongo ${CONNECTION_STR} --quiet --eval "db.getCollectionNames()" | sed 's/,/ /g; s/"//g; s/\]//g; s/\[//g' )
 
 for collection in $COLLECTIONS; do
