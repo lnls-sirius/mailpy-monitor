@@ -5,13 +5,12 @@ import threading
 import time
 import typing
 
+import app.db as db
 import app.entities as entities
 import app.helpers as helpers
-from app.db import make_db_manager
+import app.mail as mail
 
-from .sms import MailService
-
-logger = logging.getLogger("Manager")
+logger = logging.getLogger()
 
 SMS_MAX_QUEUE_SIZE = 50000
 
@@ -26,8 +25,8 @@ class Manager:
         self.tick: float = 15
         self.running: bool = True
 
-        self.db = make_db_manager(url=db_url)
-        self.sms = MailService(login=login, passwd=passwd, tls=tls)
+        self.db = db.make_db_manager(url=db_url)
+        self.mail_client = mail.MailClient(login=login, passwd=passwd, tls=tls)
 
         self.main_thread_executor_workers = 1
         self.main_thread_executor = concurrent.futures.ThreadPoolExecutor(
@@ -40,32 +39,40 @@ class Manager:
 
     def load_from_database(self):
         """Load entries from database"""
-        dict_entries = self.db.get_entries()
-        for d_entry in dict_entries:
+        entries_data = self.db.get_entries()
+        for entry_data in entries_data:
 
             # Create group if needed
-            group_name = d_entry["group"]
-            if group_name not in self.groups:
-                self.groups[group_name] = entities.Group(name=group_name, enabled=True)
-                logger.info(f"Creating group {self.groups[group_name]}")
+            if entry_data.group not in self.groups:
+                group_data: db.GroupData = self.db.get_group(entry_data.group)
+                self.groups[entry_data.group] = entities.Group(
+                    name=group_data.name, enabled=group_data.enabled, id=group_data.id
+                )
+                logger.info(f"Creating group {group_data}")
 
             try:
-                _id = d_entry["_id"]
-                d_entry.pop(
-                    "group", None
-                )  # Remove the group name as we are using the object
-
                 entry = entities.Entry(
-                    group=self.groups[group_name], sms_queue=self.sms_queue, **d_entry
+                    group=self.groups[entry_data.group],
+                    sms_queue=self.sms_queue,
+                    entry_data=entry_data,
                 )
                 entry.connect()
-                self.entries[_id] = entry
-                logger.info(f"Creating entry {self.entries[_id]}")
+                self.entries[entry_data.id] = entry
+                logger.info(f"Creating entry {entry}")
             except helpers.EntryException:
                 logger.exception("Failed to create entry")
 
-    def send_email(self, event: entities.EmailEvent):
-        self.sms.send_email(event)
+    def send_email(self, event: entities.AlarmEvent):
+        try:
+            self.mail_client.send_email(event)
+        except Exception as e:
+            logger.exception(f"Failed to send email for event '{event}'. Error {e}")
+
+    def persist_event(self, event: entities.AlarmEvent):
+        try:
+            logger.info(f"@todo: Persist event {event} to database")
+        except Exception as e:
+            logger.exception(f"Failed to persist event {event} to database. Error {e}")
 
     def start(self):
         # self.main_thread.start()
@@ -95,9 +102,10 @@ class Manager:
         while self.running:
             event = self.sms_queue.get(block=True, timeout=None)
 
-            if type(event) != entities.EmailEvent:
+            if type(event) != entities.AlarmEvent:
                 logger.warning(f"Unknown event type {event} obtained from queue.")
                 continue
 
             # Send an email
             self.send_email(event)
+            self.persist_event(event)
