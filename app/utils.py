@@ -49,6 +49,10 @@ class MongoContainerManager:
         self._container.start()
 
     def create_mongodb_container(self) -> docker.models.containers.Container:
+        if not self.check_image_exists(self.config.image):
+            self.docker_client.pull(self.config.image)
+
+        self.docker_client.images.pull(self.config.image)
         return self.docker_client.containers.create(
             self.config.image,
             name=self.config.name,
@@ -68,6 +72,13 @@ class MongoContainerManager:
             ports={"27017/tcp": (self.config.host, self.config.port)},
             detach=True,
         )
+
+    def check_image_exists(self, name):
+        tags = []
+        for str_l in [i.tags for i in self.docker_client.images.list()]:
+            for i in str_l:
+                tags.append(i)
+        return name in tags
 
     def remove_previous_mongodb_containers(self):
         for container in self.docker_client.containers.list(all=True):
