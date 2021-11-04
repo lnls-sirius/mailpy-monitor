@@ -68,9 +68,8 @@ class MailClient:
         self._server.login(self._login, self._passwd)
         logger.info(f"logged successfully with {self._login}")
 
-    def _compose_msg(self, event: entities.EmailEvent) -> MIMEMultipart:
+    def _compose_msg(self, event: entities.AlarmEvent) -> MIMEMultipart:
         """
-        :param commons.EmailEvent event: Message content
         :return: body of the e-mail that will be sent
         """
         msg = MIMEMultipart("alternative")
@@ -90,7 +89,7 @@ class MailClient:
         msg.attach(html_part)
         return msg
 
-    def send_email(self, event: entities.EmailEvent):
+    def send_email(self, event: entities.AlarmEvent):
         try:
             self._authenticate()
 
@@ -106,9 +105,6 @@ class MailClient:
                 msg=self._compose_msg(event).as_string(),
             )
             logger.info(f"Email sent with success, event {event}")
-
-        except Exception as e:
-            logger.exception(f"Error from the sms module {e}")
 
         finally:
             self._disconnect()

@@ -3,7 +3,7 @@ import typing
 
 
 @dataclasses.dataclass(frozen=True)
-class EmailEvent:
+class AlarmEvent:
     """Email event sent by entry to the SMS queue to signal alarms"""
 
     pvname: str

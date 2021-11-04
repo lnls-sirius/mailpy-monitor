@@ -5,7 +5,7 @@ import typing
 import app.entities as entities
 
 
-def _compose_text(event: entities.EmailEvent, utc_ts: str, timestamp: str):
+def _compose_text(event: entities.AlarmEvent, utc_ts: str, timestamp: str):
     return f"""{event.warning}\n
      - PV name:         {event.pvname}
      - Specified range: {event.specified_value_message}
@@ -20,7 +20,7 @@ def _compose_text(event: entities.EmailEvent, utc_ts: str, timestamp: str):
      Controls Group\n"""
 
 
-def _compose_html(event: entities.EmailEvent, utc_ts: str, timestamp: str):
+def _compose_html(event: entities.AlarmEvent, utc_ts: str, timestamp: str):
     return f"""\
         <html>
             <body>
@@ -42,7 +42,7 @@ def _compose_html(event: entities.EmailEvent, utc_ts: str, timestamp: str):
         </html>"""
 
 
-def compose_msg_content(event: entities.EmailEvent) -> typing.Tuple[str, str]:
+def compose_msg_content(event: entities.AlarmEvent) -> typing.Tuple[str, str]:
     """
     @return (text, html)
     """

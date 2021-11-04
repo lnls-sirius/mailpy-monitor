@@ -9,13 +9,13 @@ import epics
 
 from app.helpers import EntryException
 
+from .AlarmEvent import AlarmEvent
 from .Condition import (
     Condition,
     ConditionCheckResponse,
     ConditionException,
     create_condition,
 )
-from .EmailEvent import EmailEvent
 from .Group import Group
 
 logger = logging.getLogger()
@@ -110,11 +110,11 @@ class Entry:
     def __str__(self):
         return f'<Entry={self.id} pvname="{self.pvname}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
 
-    def handle_condition(self, value) -> typing.Optional[EmailEvent]:
+    def handle_condition(self, value) -> typing.Optional[AlarmEvent]:
         """
         Handle the alarm condition and return an post a request to the SMS queue.
         """
-        event: typing.Optional[EmailEvent] = None
+        event: typing.Optional[AlarmEvent] = None
         cond_res: typing.Optional[ConditionCheckResponse] = None
 
         try:
@@ -130,7 +130,7 @@ class Entry:
 
         try:
             if cond_res:
-                event = EmailEvent(
+                event = AlarmEvent(
                     pvname=self.pvname,
                     specified_value_message=cond_res.message,
                     unit=self.unit,
@@ -183,7 +183,7 @@ class Entry:
         except Exception as e:
             logger.exception(f"Unexpected exception when handling PV event '{e}'.")
 
-    def dispatch_alarm_event(self, event: EmailEvent):
+    def dispatch_alarm_event(self, event: AlarmEvent):
         if not event:
             logger.error(f"Cannot dispatch empty event {event} from entry {self}")
             return
