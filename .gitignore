@@ -1,3 +1,4 @@
+.coverage
 .idea/
 .vscode/.ropeproject
 ALERT_MAIL_LOGIN
@@ -5,4 +6,5 @@ ALERT_MAIL_PASSWORD
 SMS_LOGIN
 SMS_PASSWORD
 __pycache__/
+coverage.xml
 log/mailpy.log*
