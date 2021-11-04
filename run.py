@@ -7,6 +7,7 @@ import yaml
 
 import app
 
+logger = logging.getLogger()
 if __name__ == "__main__":
     with open("app/logging.yaml", "r") as f:
         log_config = yaml.safe_load(f)
@@ -38,8 +39,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-db",
         "--db_url",
-        metavar="mongodb://localhost:27017/mailpy-db",
-        default="mongodb://localhost:27017/",
+        metavar="mongodb://localhost:27017/mailpy",
+        default="mongodb://localhost:27017/mailpy",
         help="MongoDB connection URL",
     )
 
@@ -52,7 +53,6 @@ if __name__ == "__main__":
         passwd=args.passwd,
         db_url=args.db_url,
     )
-
     sms_app.load_from_database()
     sms_app.start()
     sms_app.join()
