@@ -223,7 +223,7 @@ class ConditionIncreasingStep(Condition):
         except ValueError as e:
             raise ConditionException(
                 f"Cannot create condition, only numeric values are supported. {e}"
-            )
+            ) from e
 
         s = self.step_values[0]
         for v in self.step_values[1:]:
