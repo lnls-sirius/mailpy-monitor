@@ -14,7 +14,7 @@ from app.entities.Condition import (
 
 class AlarmConditionTest(unittest.TestCase):
     def check_condition_inputs(self, condition):
-        wrong_inputs = ["!@#", "asf", "123", [], {}, ()]
+        wrong_inputs = ["!@#", "asf", "123", [], {}, (), None]
         for input in wrong_inputs:
             with self.assertRaises(ConditionException):
                 condition.check_alarm(input)
@@ -127,6 +127,16 @@ class AlarmConditionTest(unittest.TestCase):
             ConditionEnums.OutOfRange, alarm_str, ConditionOutOfRange
         )
         self.check_condition_inputs(condition)
+
+        with self.assertRaises(ConditionException):
+            self._create_condition(
+                ConditionEnums.OutOfRange, "1312:0", ConditionOutOfRange
+            )
+
+        with self.assertRaises(ConditionException):
+            self._create_condition(
+                ConditionEnums.OutOfRange, "-1:-10", ConditionOutOfRange
+            )
 
         self.assertIsNone(condition.check_alarm(alarm_min))
         self.assertIsNone(condition.check_alarm(alarm_max))
