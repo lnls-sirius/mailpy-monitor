@@ -5,7 +5,7 @@ from app.db import EntryData, GroupData, make_db_manager, DBManager, create_mong
 from .utils import MongoContainerManager, MongoJsonLoader
 
 
-class TestMongodbInterface(unittest.TestCase):
+class TestDatabaseInteraction(unittest.TestCase):
 
     db: DBManager
     container: MongoContainerManager
