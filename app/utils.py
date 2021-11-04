@@ -37,6 +37,13 @@ class MongoContainerManager:
         self.docker_client = docker.client.DockerClient()
         self._container: typing.Optional[docker.models.containers.Container] = None
 
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.stop()
+
     def stop(self):
         if self._container:
             self._container.stop()
@@ -50,7 +57,7 @@ class MongoContainerManager:
 
     def create_mongodb_container(self) -> docker.models.containers.Container:
         if not self.check_image_exists(self.config.image):
-            self.docker_client.pull(self.config.image)
+            self.docker_client.images.pull(self.config.image)
 
         self.docker_client.images.pull(self.config.image)
         return self.docker_client.containers.create(
@@ -81,8 +88,12 @@ class MongoContainerManager:
         return name in tags
 
     def remove_previous_mongodb_containers(self):
+        container: docker.models.containers.Container
         for container in self.docker_client.containers.list(all=True):
-            if container.name == self.config.name:
+            if (
+                type(container) == docker.models.containers.Container
+                and container.name == self.config.name
+            ):
                 container.stop()
                 container.remove()
 
