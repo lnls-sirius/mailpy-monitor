@@ -1,4 +1,12 @@
 import threading
+import typing
+
+
+class GroupData(typing.NamedTuple):
+    id: str
+    name: str
+    enabled: bool
+    description: str
 
 
 class Group:
@@ -27,11 +35,3 @@ class Group:
 
     def __str__(self):
         return f'Group(id={self._id},name="{self.name}",enabled="{self.enabled}")'
-
-    def as_dict(self):
-        return {
-            "name": self.name,
-            "enabled": self.enabled,
-            "id": self.id,
-            "description": self.description,
-        }

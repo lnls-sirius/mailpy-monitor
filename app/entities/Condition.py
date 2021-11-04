@@ -22,8 +22,14 @@ class ConditionEnums(object):
                 "name": ConditionEnums.OutOfRange,
                 "desc": "Must remain within the specified range.",
             },
-            {"name": ConditionEnums.SuperiorThan, "desc": "Must remain superior than."},
-            {"name": ConditionEnums.InferiorThan, "desc": "Must remain inferior than."},
+            {
+                "name": ConditionEnums.SuperiorThan,
+                "desc": "Must remain superior than.",
+            },
+            {
+                "name": ConditionEnums.InferiorThan,
+                "desc": "Must remain inferior than.",
+            },
             {
                 "name": ConditionEnums.IncreasingStep,
                 "desc": "Each increasing step triggers an alarm.",
@@ -134,15 +140,16 @@ class ConditionOutOfRange(Condition):
         if not limits or type(limits) != str:
             raise ConditionException(f"Cannot create condition with limits '{limits}'")
 
-        _min, _max = limits.split(":")
+        _data = limits.split(":")
+        _min, _max = float(_data[0]), float(_data[1])
 
         if _min >= _max:
             raise ConditionException(
                 f"Cannot create condition with limits '{limits}', condition '{_min}<{_max}' must be valid"
             )
 
-        self.alarm_min = float(_min)
-        self.alarm_max = float(_max)
+        self.alarm_min = _min
+        self.alarm_max = _max
 
     def check_alarm(self, value: float) -> typing.Optional[ConditionCheckResponse]:
         if type(value) != int and type(value) != float:

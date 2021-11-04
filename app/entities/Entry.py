@@ -33,17 +33,17 @@ class DummyPV:
         return f"<DummyPV pvname={self.pvname}>"
 
 
-class EntrySettings(typing.NamedTuple):
+class EntryData(typing.NamedTuple):
     id: str
     pvname: str
-    emails: str
+    emails: typing.List[str]
     condition: str
     alarm_values: str
     unit: str
     warning_message: str
     subject: str
     email_timeout: float
-    group: Group
+    group: str
 
 
 class Entry:
@@ -54,39 +54,31 @@ class Entry:
 
     def __init__(
         self,
-        id: str,
-        pvname: str,
-        emails: typing.List[str],
-        condition: str,
-        alarm_values: str,
-        unit: str,
-        warning_message: str,
-        subject: str,
-        email_timeout: float,
         group: Group,
+        entry_data: EntryData,
         sms_queue: multiprocessing.Queue,
         dummy: bool = False,
-        settings: EntrySettings = None,
     ):
-        self._id = id
-        self._pvname = pvname
+        self._id = entry_data.id
+        self._pvname = entry_data.pvname
         self._pv: typing.Optional[epics.PV] = None
 
         self._condition: Condition = create_condition(
-            condition=condition.lower().strip(), alarm_values=alarm_values
+            condition=entry_data.condition.lower().strip(),
+            alarm_values=entry_data.alarm_values,
         )
 
         self._dummy = dummy
-        self._pvname = pvname.strip()
+        self._pvname = entry_data.pvname.strip()
         self._sms_queue_dispatch_lock = threading.RLock()
 
-        self.email_timeout = email_timeout
-        self.emails = emails
+        self.email_timeout = entry_data.email_timeout
+        self.emails = entry_data.emails
         self.group = group
         self.sms_queue = sms_queue
-        self.subject = subject
-        self.unit = unit
-        self.warning_message = warning_message
+        self.subject = entry_data.subject
+        self.unit = entry_data.unit
+        self.warning_message = entry_data.warning_message
 
         # reset last_event_time for all PVs, so it start monitoring right away
         self.last_event_time = time.time() - self.email_timeout
@@ -105,7 +97,7 @@ class Entry:
 
     @property
     def alarm_values(self):
-        return self.condition.alarm_values
+        return self._condition.alarm_values
 
     @property
     def condition(self):
@@ -115,22 +107,8 @@ class Entry:
     def id(self):
         return self._id
 
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "pvname": self.pvname,
-            "condition": self.condition,
-            "alarm_values": self.alarm_values,
-            "unit": self.unit,
-            "emails": self.emails,
-            "group": self.group.name,
-            "warning_message": self.warning_message,
-            "subject": self.subject,
-            "email_timeout": self.email_timeout,
-        }
-
     def __str__(self):
-        return f'<Entry={self._id} pvname="{self.pvname}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
+        return f'<Entry={self.id} pvname="{self.pvname}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
 
     def handle_condition(self, value) -> typing.Optional[EmailEvent]:
         """

@@ -6,7 +6,7 @@ import pymongo
 import pymongo.collection
 import pymongo.database
 
-logger = logging.getLogger("DB")
+logger = logging.getLogger()
 
 
 class DBConnector:

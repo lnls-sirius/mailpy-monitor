@@ -1,4 +1,3 @@
-import dataclasses
 import logging
 import typing
 
@@ -6,31 +5,12 @@ import pymongo
 import pymongo.database
 
 from app.entities import ConditionEnums
+from app.entities.Entry import EntryData
+from app.entities.Group import GroupData
 
 from .connector import DBConnector
 
 logger = logging.getLogger()
-
-
-# @dataclasses.dataclass
-class GroupData(typing.NamedTuple):
-    id: str
-    name: str
-    enabled: bool
-    description: str
-
-
-class EntryData(typing.NamedTuple):
-    id: str
-    pvname: str
-    emails: typing.List[str]
-    condition: str
-    alarm_values: str
-    unit: str
-    warning_message: str
-    subject: str
-    email_timeout: float
-    group: str
 
 
 class DBManager:
@@ -77,7 +57,7 @@ class DBManager:
         entries: pymongo.collection.Collection = self.db[DBManager.ENTRIES_COLLECTION]
         return [self._parse_entry(e) for e in entries.find()]
 
-    def get_group(self, group_name: str) -> typing.Optional[GroupData]:
+    def get_group(self, group_name: str):
         groups: pymongo.collection.Collection = self.db[DBManager.GROUPS_COLLECTION]
         return self._parse_group(groups.find_one({"name": group_name}))
 
