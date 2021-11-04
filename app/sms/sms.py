@@ -10,7 +10,7 @@ import app.entities as entities
 
 from .message import compose_msg_content
 
-logger = logging.getLogger("SMS")
+logger = logging.getLogger()
 
 
 class SMSException(Exception):
