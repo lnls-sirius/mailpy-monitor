@@ -7,6 +7,11 @@ from a MongoDB and monitor them. If any these PVs is not in it's specified
 value, an e-mail is sent with a warning message to one or a list of e-mail
 address.
 
+## Tests & Coverage
+```
+coverage run -m unittest discover && coverage xml && coverage report
+```
+
 ## Deploy
 
 Environment varibles:
