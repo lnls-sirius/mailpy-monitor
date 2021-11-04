@@ -1,6 +1,8 @@
 import dataclasses
 import typing
 
+from .Timestamp import TimestampNow
+
 
 @dataclasses.dataclass(frozen=True)
 class AlarmEvent:
@@ -14,3 +16,5 @@ class AlarmEvent:
     warning: str
     condition: str
     value_measured: str
+
+    ts: TimestampNow = TimestampNow()
