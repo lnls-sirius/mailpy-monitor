@@ -10,10 +10,10 @@ import epics
 from app.helpers import EntryException
 
 from .Condition import (
+    Condition,
     ConditionCheckResponse,
     ConditionException,
     create_condition,
-    Condition,
 )
 from .EmailEvent import EmailEvent
 from .Group import Group

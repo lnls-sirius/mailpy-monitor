@@ -1,7 +1,7 @@
 import typing
 import unittest
 
-from app.db import EntryData, GroupData, make_db_manager, DBManager, create_mongodb_url
+from app.db import DBManager, EntryData, GroupData, create_mongodb_url, make_db_manager
 from app.utils import MongoContainerManager, MongoJsonLoader
 
 
