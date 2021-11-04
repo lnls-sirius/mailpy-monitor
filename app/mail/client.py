@@ -18,7 +18,7 @@ class SMSException(Exception):
         super().__init__(*args)
 
 
-class MailService:
+class MailClient:
     TLS_PORT = 587
     SSL_PORT = 465
 
