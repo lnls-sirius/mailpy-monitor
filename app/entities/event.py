@@ -41,7 +41,7 @@ def create_event(
     subject: str,
     emails: typing.List[str],
     condition: str,
-    value_measured: any,
+    value_measured: typing.Any,
 ):
 
     return AlarmEvent(

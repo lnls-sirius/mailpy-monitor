@@ -1,112 +1,95 @@
-import concurrent.futures
+import dataclasses
 import logging
 import queue
 import threading
 import time
 import typing
 
+import app.consumer as consumer
+import app.data_connector as data_connector
 import app.db as db
 import app.entities as entities
-import app.helpers as helpers
-import app.mail as mail
 
 logger = logging.getLogger()
 
-SMS_MAX_QUEUE_SIZE = 50000
+EVENT_QUEUE_SIZE = 50000
+
+
+@dataclasses.dataclass(frozen=True)
+class Config:
+    db_connection_string: str
+    email_login: str
+    email_password: str
+    email_tls_enabled: bool = False
 
 
 class Manager:
-    def __init__(self, tls: bool, login: str, passwd: str, db_url: str):
+    def __init__(self, config: Config):
 
-        self.sms_queue: queue.Queue = queue.Queue(maxsize=SMS_MAX_QUEUE_SIZE)
+        self.event_queue: queue.Queue = queue.Queue(maxsize=EVENT_QUEUE_SIZE)
 
         self.entries: typing.Dict[str, entities.Entry] = {}
-        self.groups: typing.Dict[str, entities.Group] = {}
-        self.tick: float = 15
-        self.running: bool = True
+        self._tick: float = 15
+        self._running: bool = True
 
-        self.db = db.make_db_manager(url=db_url)
-        self.mail_client = mail.MailClient(login=login, passwd=passwd, tls=tls)
+        self.db = db.make_db_manager(url=config.db_connection_string)
+        self.data_connector = data_connector.DataConnector(self.db, self.event_queue)
 
-        self.main_thread_executor_workers = 1
-        self.main_thread_executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.main_thread_executor_workers,
-            thread_name_prefix="SMSAction",
+        self._tick_thread = threading.Thread(
+            daemon=False,
+            name="EPICS Tick",
+            target=self._do_tick,
         )
-        self.tick_thread = threading.Thread(
-            daemon=False, target=self.do_tick, name="SMS Tick"
+        self._event_dispatcher_thread = threading.Thread(
+            daemon=True,
+            name="Event Dispatcher",
+            target=self._event_dispatcher,
         )
+
+        self.consumers: typing.List[consumer.BaseEventConsumer] = [
+            consumer.PersistenceConsumer(),
+            consumer.EmailConsumer(
+                login=config.email_login,
+                passwd=config.email_password,
+                tls=config.email_tls_enabled,
+            ),
+        ]
+
+    def _start_consumers(self):
+        for c in self.consumers:
+            c.start()
+
+    def _consume(self, obj):
+        for c in self.consumers:
+            c.add(obj)
 
     def load_from_database(self):
         """Load entries from database"""
         entries_data = self.db.get_entries()
         for entry_data in entries_data:
-
-            # Create group if needed
-            if entry_data.group not in self.groups:
-                group_data: db.GroupData = self.db.get_group(entry_data.group)
-                self.groups[entry_data.group] = entities.Group(
-                    name=group_data.name, enabled=group_data.enabled, id=group_data.id
-                )
-                logger.info(f"Creating group {group_data}")
-
-            try:
-                entry = entities.Entry(
-                    group=self.groups[entry_data.group],
-                    sms_queue=self.sms_queue,
-                    entry_data=entry_data,
-                )
-                entry.connect()
-                self.entries[entry_data.id] = entry
-                logger.info(f"Creating entry {entry}")
-            except helpers.EntryException:
-                logger.exception("Failed to create entry")
-
-    def send_email(self, event: entities.AlarmEvent):
-        try:
-            with self.mail_client:
-                self.mail_client.send_email(event)
-        except Exception as e:
-            logger.exception(f"Failed to send email for event '{event}'. Error {e}")
-
-    def persist_event(self, event: entities.AlarmEvent):
-        try:
-            logger.info(f"@todo: Persist event {event} to database")
-        except Exception as e:
-            logger.exception(f"Failed to persist event {event} to database. Error {e}")
+            self.data_connector.create_entry(entry_data=entry_data)
 
     def start(self):
-        # self.main_thread.start()
-        for _ in range(self.main_thread_executor_workers):
-            self.main_thread_executor.submit(self.consume_alarm_events)
-        self.main_thread_executor.shutdown(wait=False)
-
-        self.tick_thread.start()
+        self._start_consumers()
+        self._tick_thread.start()
+        self._event_dispatcher_thread.start()
 
     def join(self):
-        self.tick_thread.join()
+        self._tick_thread.join()
+        self._event_dispatcher_thread.join()
 
-    def do_tick(self):
+    def _do_tick(self):
         """Trigger Entry processing"""
-        while self.running:
-            time.sleep(self.tick)
-            for entry in self.entries.values():
-                if not self.running:
-                    break
-                entry.trigger()
+        while self._running:
+            time.sleep(self._tick)
+            self.data_connector.tick()
 
-    def consume_alarm_events(self):
-        """
-        Application loop: Check email targets
-        """
-
-        while self.running:
-            event = self.sms_queue.get(block=True, timeout=None)
+    def _event_dispatcher(self):
+        while self._running:
+            event = self.event_queue.get(block=True, timeout=None)
 
             if type(event) != entities.AlarmEvent:
                 logger.warning(f"Unknown event type {event} obtained from queue.")
                 continue
 
-            # Send an email
-            self.send_email(event)
-            self.persist_event(event)
+            self._consume(event)

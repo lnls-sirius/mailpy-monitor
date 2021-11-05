@@ -14,6 +14,7 @@ class ConditionEnums(object):
     InferiorThan = "inferior than"
     IncreasingStep = "increasing step"
     DecreasingStep = "decreasing step"
+    Disconnected = "disconnected"
 
     @staticmethod
     def get_conditions() -> typing.List:
@@ -64,6 +65,19 @@ class Condition:
 
     def check_alarm(self, value: typing.Any) -> typing.Optional[ConditionCheckResponse]:
         raise NotImplementedError("Child class must impplement this method")
+
+
+class ConditionDisconnected(Condition):
+    @property
+    def name(self) -> str:
+        return ConditionEnums.Disconnected
+
+    def __init__(self, limits: str) -> None:
+        super().__init__(limits)
+
+    def check_alarm(self, value: typing.Any) -> typing.Optional[ConditionCheckResponse]:
+        """Disconnect condition will never trigger an event by value check_alarm"""
+        return None
 
 
 class ConditionInferiorThan(Condition):

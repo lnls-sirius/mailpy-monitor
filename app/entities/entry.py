@@ -1,11 +1,8 @@
 import logging
-import multiprocessing
 import queue
 import threading
 import time
 import typing
-
-import epics
 
 from .condition import Condition, create_condition
 from .event import AlarmEvent, create_event
@@ -14,16 +11,39 @@ from .group import Group
 logger = logging.getLogger()
 
 
-class DummyPV:
-    def __init__(self, pvname):
-        self.pvname = pvname
+class ConnectionChangedInfo(typing.NamedTuple):
+    pvname: str
+    conn: bool
 
-    @property
-    def value(self):
-        return None
 
-    def __str__(self):
-        return f"<DummyPV pvname={self.pvname}>"
+#       "pvname": "LA-CN:H1MPS-1:A2Temp2",
+#       "value": 0.0,
+#       "status": 17,
+#       "ftype": 20,
+#       "host": "172.25.184.177:5064",
+#       "severity": 3,
+#       "timestamp": 1636134688.979506,
+#       "posixseconds": 1636134688.0,
+#       "nanoseconds": 979506600,
+#       "precision": None,
+#       "units": None,
+#       "enum_strs": None,
+#       "upper_disp_limit": None,
+#       "lower_disp_limit": None,
+#       "upper_alarm_limit": None,
+#       "lower_alarm_limit": None,
+#       "lower_warning_limit": None,
+#       "upper_warning_limit": None,
+#       "upper_ctrl_limit": None,
+#       "lower_ctrl_limit": None,
+#       "nelm": 1,
+#       "type": "time_double",
+class ValueChangedInfo(typing.NamedTuple):
+    pvname: str
+    value: typing.Any
+    status: int
+    host: str
+    severity: int
 
 
 class EntryData(typing.NamedTuple):
@@ -49,26 +69,25 @@ class Entry:
         self,
         group: Group,
         entry_data: EntryData,
-        sms_queue: multiprocessing.Queue,
-        dummy: bool = False,
+        event_queue: queue.Queue,
     ):
+        self._value_callback_id: typing.Optional[int] = None
+        self._connection_callback_id: typing.Optional[int] = None
+
         self._id = entry_data.id
         self._pvname = entry_data.pvname
-        self._pv: typing.Optional[epics.PV] = None
 
         self._condition: Condition = create_condition(
             condition=entry_data.condition.lower().strip(),
             alarm_values=entry_data.alarm_values,
         )
 
-        self._dummy = dummy
-        self._pvname = entry_data.pvname.strip()
         self._sms_queue_dispatch_lock = threading.RLock()
 
         self.email_timeout = entry_data.email_timeout
         self.emails = entry_data.emails
         self.group = group
-        self.sms_queue = sms_queue
+        self.event_queue = event_queue
         self.subject = entry_data.subject
         self.unit = entry_data.unit
         self.warning_message = entry_data.warning_message
@@ -76,13 +95,21 @@ class Entry:
         # reset last_event_time for all PVs, so it start monitoring right away
         self.last_event_time = time.time() - self.email_timeout
 
-        self._pv = DummyPV(pvname=self.pvname)
+    @property
+    def value_callback_id(self):
+        return self._value_callback_id
 
-    def connect(self):
-        if not self._dummy:
-            # The last action is to create a PV
-            self._pv: epics.PV = epics.PV(pvname=self._pvname.strip())
-            self._pv.add_callback(self.check_alarms)
+    @value_callback_id.setter
+    def value_callback_id(self, value_callback_id: int):
+        self._value_callback_id = value_callback_id
+
+    @property
+    def connection_callback_id(self):
+        return self._connection_callback_id
+
+    @connection_callback_id.setter
+    def connection_callback_id(self, connection_callback_id: int):
+        self._connection_callback_id = connection_callback_id
 
     @property
     def pvname(self):
@@ -101,7 +128,7 @@ class Entry:
         return self._id
 
     def __str__(self):
-        return f'Entry({self.id},"{self.pvname}","{self.condition}",{self.group},"{self.alarm_values}",{self.emails}>'
+        return f'Entry({self.id},"{self.pvname}","{self.condition}",{self.group.name},"{self.alarm_values}",{self.emails}>'
 
     def handle_condition(self, value) -> typing.Optional[AlarmEvent]:
         """
@@ -122,16 +149,27 @@ class Entry:
             value_measured=value,
         )
 
-    def trigger(self):
-        """Manual trigger"""
-        self.check_alarms(value=self._pv.value)
-
     def is_timeout_active(self):
         timestamp = time.time()
         timedelta = timestamp - self.last_event_time
         return timedelta < self.email_timeout
 
-    def check_alarms(self, ignore_email_timeout=False, **kwargs):
+    def handle_connection_change(self, data: ConnectionChangedInfo):
+        if self.pvname != data.pvname:
+            logger.warning(
+                f"{self} received a wrong connection_change event from pv {data.pvname}"
+            )
+            return
+
+        if data.conn:
+            logger.info(f"PV {data.pvname} reconnected")
+            return
+
+        logger.warning(f"PV {data.pvname} has disconnected")
+
+        # @todo: Consider dispatching an alarm to the queue
+
+    def handle_value_change(self, data: ValueChangedInfo):
         """
         Define if an alarm check should be performed. Disconnected PVs will are not checked.
         Trigger this function as a callback and within a timer due to the sms timeout. e.g.: Callback may be ignored.
@@ -141,16 +179,15 @@ class Entry:
             logger.debug(f"Ignoring {self} due to disabled group")
             return
 
-        if not self._pv.connected:
-            logger.info(f"Ignoring {self}, PV is disconnected")
-            return
-
-        if self.is_timeout_active() and not ignore_email_timeout:
+        if self.is_timeout_active():
             logger.info(f"Ignoring event from {self}, timeout still active.")
             return
 
+        if data.value is None:
+            return
+
         try:
-            event = self.handle_condition(value=kwargs["value"])
+            event = self.handle_condition(data.value)
             if not event:
                 return
 
@@ -167,7 +204,7 @@ class Entry:
         try:
             with self._sms_queue_dispatch_lock:  # Lock used to maintain the last_event_time in sync with the queue
                 logger.info(f"New event '{event}' being dispatched from {self}")
-                self.sms_queue.put(event, block=False, timeout=None)
+                self.event_queue.put(event, block=False, timeout=None)
                 self.last_event_time = time.time()
 
         except queue.Full:

@@ -6,6 +6,7 @@ import logging.config
 import yaml
 
 import app
+from app.manager import Config
 
 logger = logging.getLogger()
 if __name__ == "__main__":
@@ -48,10 +49,12 @@ if __name__ == "__main__":
 
     # SMS
     sms_app = app.Manager(
-        tls=args.tls,
-        login=args.login,
-        passwd=args.passwd,
-        db_url=args.db_url,
+        config=Config(
+            email_tls_enabled=args.tls,
+            email_login=args.login,
+            email_password=args.passwd,
+            db_connection_string=args.db_url,
+        )
     )
     sms_app.load_from_database()
     sms_app.start()
