@@ -145,13 +145,13 @@ class MongoJsonLoader:
     def _create_entry(self, d):
         return EntryData(
             id=d["_id"]["$oid"],
-            pvname=d["pvname"],
+            pvname=d["pvname"].strip(),
             emails=d["emails"].split(":"),
-            condition=d["condition"],
-            alarm_values=d["alarm_values"],
-            unit=d["unit"],
-            warning_message=d["warning_message"],
-            subject=d["subject"],
+            condition=d["condition"].strip(),
+            alarm_values=d["alarm_values"].strip(),
+            unit=d["unit"].strip(),
+            warning_message=d["warning_message"].strip(),
+            subject=d["subject"].strip(),
             email_timeout=d["email_timeout"],
-            group=d["group"],
+            group=d["group"].strip(),
         )
