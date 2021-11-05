@@ -26,6 +26,9 @@ jobs:
           coverage run -m unittest discover
           coverage xml
           coverage report
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
