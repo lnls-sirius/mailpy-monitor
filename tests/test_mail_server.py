@@ -47,21 +47,21 @@ class TestMailClient(unittest.TestCase):
             ) as client:
                 client.send_email(event=self.event_fixture)
 
-    def test_send_email(self):
-        event = AlarmEvent(
-            pvname="MailpyContinuousIntegrationTest",
-            specified_value_message="Out of range!!!",
-            unit="U",
-            subject="Mailpy: Continuous Integration Test",
-            emails=[os.environ.get("EMAIL_USER")],
-            warning="",
-            value_measured="-100",
-            condition=ConditionEnums.InferiorThan,
-        )
-        with MailClient(
-            debug_level=1,
-            login=os.environ.get("EMAIL_USER"),
-            passwd=os.environ.get("EMAIL_PASSWORD"),
-            tls=False,
-        ) as client:
-            client.send_email(event=event)
+  #  def test_send_email(self):
+   #     event = AlarmEvent(
+  #          pvname="MailpyContinuousIntegrationTest",
+ #           specified_value_message="Out of range!!!",
+ #           unit="U",
+ #           subject="Mailpy: Continuous Integration Test",
+ #           emails=[os.environ.get("EMAIL_USER")],
+#            warning="",
+#            value_measured="-100",
+#            condition=ConditionEnums.InferiorThan,
+#        )
+#        with MailClient(
+#            debug_level=1,
+#            login=os.environ.get("EMAIL_USER"),
+#            passwd=os.environ.get("EMAIL_PASSWORD"),
+#            tls=False,
+#        ) as client:
+#            client.send_email(event=event)
