@@ -1,9 +1,14 @@
 import datetime
+import typing
 
 
-class TimestampNow:
-    def __init__(self) -> None:
-        self._ts = datetime.datetime.now(datetime.timezone.utc)
+class Timestamp:
+    def __init__(self, now: typing.Optional[datetime.datetime] = None) -> None:
+        if not (now is None) and type(now) != datetime.date:
+            raise ValueError(
+                f"Invalid input now '{now}', required type {datetime.datetime}"
+            )
+        self._ts = datetime.datetime.now(datetime.timezone.utc) if now is None else now
         self._local_str = self.format_for_readers(self._ts)
         self._utc_str = self.format_for_archiver(self._ts)
 
@@ -23,9 +28,9 @@ class TimestampNow:
     def utc_str(self):
         return self._utc_str
 
-    def __str__(self):
-        return f"{self._ts}"
-
     @property
     def ts(self):
         return self._ts
+
+    def __str__(self):
+        return f"{self._ts}"

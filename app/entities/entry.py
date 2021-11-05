@@ -7,16 +7,9 @@ import typing
 
 import epics
 
-from app.helpers import EntryException
-
-from .AlarmEvent import AlarmEvent
-from .Condition import (
-    Condition,
-    ConditionCheckResponse,
-    ConditionException,
-    create_condition,
-)
-from .Group import Group
+from .condition import Condition, create_condition
+from .event import AlarmEvent, create_event
+from .group import Group
 
 logger = logging.getLogger()
 
@@ -108,43 +101,26 @@ class Entry:
         return self._id
 
     def __str__(self):
-        return f'<Entry={self.id} pvname="{self.pvname}" group={self.group} condition="{self.condition}" alarm_values={self.alarm_values} emails={self.emails}">'
+        return f'Entry({self.id},"{self.pvname}","{self.condition}",{self.group},"{self.alarm_values}",{self.emails}>'
 
     def handle_condition(self, value) -> typing.Optional[AlarmEvent]:
         """
         Handle the alarm condition and return an post a request to the SMS queue.
         """
-        event: typing.Optional[AlarmEvent] = None
-        cond_res: typing.Optional[ConditionCheckResponse] = None
-
-        try:
-            cond_res = self._condition.check_alarm(value)
-        except ConditionException as e:
-            logger.exception(
-                f"Failed to check condition for input '{value}', error {e}"
-            )
-            return None
-
+        cond_res = self._condition.check_alarm(value)
         if not cond_res:
             return None
 
-        try:
-            if cond_res:
-                event = AlarmEvent(
-                    pvname=self.pvname,
-                    specified_value_message=cond_res.message,
-                    unit=self.unit,
-                    warning=self.warning_message,
-                    subject=self.subject,
-                    emails=self.emails,
-                    condition=self.condition,
-                    value_measured="{:.4}".format(value),
-                )
-
-        except EntryException:
-            logger.exception(f"Invalid entry {self}")
-
-        return event
+        return create_event(
+            pvname=self.pvname,
+            specified_value_message=cond_res.message,
+            unit=self.unit,
+            warning=self.warning_message,
+            subject=self.subject,
+            emails=self.emails,
+            condition=self.condition,
+            value_measured=value,
+        )
 
     def trigger(self):
         """Manual trigger"""

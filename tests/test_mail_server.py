@@ -1,8 +1,9 @@
+import os
 import smtplib
 import unittest
 
-from app.entities.AlarmEvent import AlarmEvent
-from app.entities.Condition import ConditionEnums
+from app.entities.condition import ConditionEnums
+from app.entities.event import AlarmEvent
 from app.mail.client import MailClient
 from app.mail.message import MessageContent, compose_msg_content
 
@@ -45,3 +46,22 @@ class TestMailClient(unittest.TestCase):
                 tls=False,
             ) as client:
                 client.send_email(event=self.event_fixture)
+
+    def test_send_email(self):
+        event = AlarmEvent(
+            pvname="MailpyContinuousIntegrationTest",
+            specified_value_message="Out of range!!!",
+            unit="U",
+            subject="Mailpy: Continuous Integration Test",
+            emails=[os.environ.get("EMAIL_USER")],
+            warning="",
+            value_measured="-100",
+            condition=ConditionEnums.InferiorThan,
+        )
+        with MailClient(
+            debug_level=1,
+            login=os.environ.get("EMAIL_USER"),
+            passwd=os.environ.get("EMAIL_PASSWORD"),
+            tls=False,
+        ) as client:
+            client.send_email(event=event)

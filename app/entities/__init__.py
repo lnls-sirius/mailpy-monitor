@@ -1,6 +1,6 @@
-from .AlarmEvent import AlarmEvent
-from .Condition import ConditionEnums
-from .Entry import Entry
-from .Group import Group
+from .condition import ConditionEnums
+from .entry import Entry
+from .event import AlarmEvent
+from .group import Group
 
 __all__ = ["Entry", "Group", "ConditionEnums", "AlarmEvent"]

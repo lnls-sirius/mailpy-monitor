@@ -1,6 +1,6 @@
 import unittest
 
-from app.entities.Condition import (
+from app.entities.condition import (
     Condition,
     ConditionEnums,
     ConditionException,

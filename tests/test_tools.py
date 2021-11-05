@@ -1,7 +1,7 @@
 import datetime
 import unittest
 
-from app.entities.Timestamp import TimestampNow
+from app.entities.timestamp import Timestamp
 from app.utils import MongoContainerManager
 
 
@@ -19,7 +19,7 @@ class TestToolsMongodb(unittest.TestCase):
 
 class TestTimestamps(unittest.TestCase):
     def test_timestamp_now(self):
-        now = TimestampNow()
+        now = Timestamp()
 
         self.assertIsInstance(now.ts, datetime.datetime)
         self.assertIsInstance(now.utc_str, str)
