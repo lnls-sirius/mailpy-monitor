@@ -5,8 +5,8 @@ import pymongo
 import pymongo.database
 
 from app.entities import ConditionEnums
-from app.entities.Entry import EntryData
-from app.entities.Group import GroupData
+from app.entities.entry import EntryData
+from app.entities.group import GroupData
 
 from .connector import DBConnector
 
@@ -42,13 +42,13 @@ class DBManager:
     def _parse_entry(self, data: typing.Any) -> EntryData:
         return EntryData(
             id=str(data["_id"]),
-            pvname=data["pvname"],
+            pvname=data["pvname"].strip(),
             emails=data["emails"].strip().split(":"),
-            condition=data["condition"],
-            alarm_values=data["alarm_values"],
-            unit=data["unit"],
-            warning_message=data["warning_message"],
-            subject=data["subject"],
+            condition=data["condition"].strip(),
+            alarm_values=data["alarm_values"].strip(),
+            unit=data["unit"].strip(),
+            warning_message=data["warning_message"].strip(),
+            subject=data["subject"].strip(),
             email_timeout=data["email_timeout"],
             group=data["group"],
         )
