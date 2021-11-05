@@ -1,8 +1,5 @@
 #!/bin/bash
-set -e
-source /opt/conda/etc/profile.d/conda.sh
-conda activate
-set -x
+set -exu
 
 [[ -f /run/secrets/ALERT_MAIL_PASSWORD ]] && \
     ALERT_MAIL_PASSWORD="$(cat /run/secrets/ALERT_MAIL_PASSWORD)"

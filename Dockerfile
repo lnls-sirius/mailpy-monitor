@@ -30,6 +30,6 @@ RUN conda install -c conda-forge pcaspy -y
 RUN mkdir -p -v /opt/mailpy
 WORKDIR /opt/mailpy
 COPY . .
-RUN pip install -y -r requirements.text
+RUN pip install -r requirements.txt
 
 ENTRYPOINT /bin/bash entrypoint.sh

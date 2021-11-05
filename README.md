@@ -17,6 +17,12 @@ address.
 coverage run -m unittest discover && coverage xml && coverage report
 ```
 
+Manual testing deploy
+
+```
+docker run --interactive --tty -e MONGODB_URI="mongodb://test:test@localhost:27017/mailpy" -e ALERT_MAIL_PASSWORD="ASD" -e ALERT_MAIL_LOGIN="ASD"  docker.io/carneirofc/mailpy-mail:latest bash
+```
+
 ## Deploy
 
 Environment varibles:
