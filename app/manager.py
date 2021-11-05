@@ -64,7 +64,8 @@ class Manager:
 
     def send_email(self, event: entities.AlarmEvent):
         try:
-            self.mail_client.send_email(event)
+            with self.mail_client:
+                self.mail_client.send_email(event)
         except Exception as e:
             logger.exception(f"Failed to send email for event '{event}'. Error {e}")
 

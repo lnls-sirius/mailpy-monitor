@@ -3,6 +3,11 @@ import typing
 import app.entities as entities
 
 
+class MessageContent(typing.NamedTuple):
+    text: str
+    html: str
+
+
 def _compose_text(event: entities.AlarmEvent):
     return f"""{event.warning}\n
      - PV name:         {event.pvname}
@@ -48,7 +53,7 @@ def _compose_html(event: entities.AlarmEvent):
         </html>"""
 
 
-def compose_msg_content(event: entities.AlarmEvent) -> typing.Tuple[str, str]:
+def compose_msg_content(event: entities.AlarmEvent) -> MessageContent:
     """
     @return (text, html)
     """
@@ -57,4 +62,4 @@ def compose_msg_content(event: entities.AlarmEvent) -> typing.Tuple[str, str]:
     text = _compose_text(event)
 
     html = _compose_html(event)
-    return text, html
+    return MessageContent(text, html)
