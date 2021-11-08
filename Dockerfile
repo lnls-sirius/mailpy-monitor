@@ -1,8 +1,5 @@
 FROM continuumio/miniconda3:4.10.3
 
-LABEL br.cnpem.maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
-LABEL br.cnpem.git="https://github.com/carneirofc/mailpy-monitor"
-
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=America/Sao_Paulo
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

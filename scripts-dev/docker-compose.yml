@@ -1,29 +1,10 @@
 version: "3.7"
 services:
-  mongo:
-    image: lnlscon/mailpy-db:v1.2
-    ports:
-      - 27017:27017
-
   mail:
-    image: carneirofc/mailpy-mail:latest
+    image: carneirofc/mailpy-monitor:7ede129-2021-11-08
     build: .
     network_mode: host
-    secrets:
-      - ALERT_MAIL_PASSWORD
-      - ALERT_MAIL_LOGIN
     environment:
-      MONGODB_URI: mongodb://localhost:27017/mailpy
+      MONGODB_URI: mongodb://test:test@localhost:27017/mailpy
       ALERT_MAIL_PASSWORD: email_password
       ALERT_MAIL_LOGIN: email_
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-secrets:
-  ALERT_MAIL_PASSWORD:
-    external: true
-  ALERT_MAIL_LOGIN:
-    external: true
