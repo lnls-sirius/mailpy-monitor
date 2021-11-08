@@ -9,6 +9,8 @@ logger = logging.getLogger()
 def start_test_database():
     import mailpy.utils
 
+    logging.load_config()
+
     parser = argparse.ArgumentParser(
         description="Start a dummy mongodb with some test data"
     )
@@ -19,6 +21,8 @@ def start_test_database():
 
 def start_alarm_server():
     import mailpy.manager
+
+    logging.load_config("logging.yml")
 
     parser = argparse.ArgumentParser(
         description="Monitor PV EPICS values and if any of them isn't in a specified range, "

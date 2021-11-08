@@ -4,17 +4,19 @@ import os
 
 import yaml
 
-LOGGING_CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "logging.yml",
-)
 
-if not os.path.exists(LOGGING_CONFIG_PATH):
-    raise ValueError(f"Falid to load logging settings from file {LOGGING_CONFIG_PATH}")
+def load_config(configfile: str = "logging-console.yml"):
+    configfile_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        configfile,
+    )
 
-with open(LOGGING_CONFIG_PATH, "r") as f:
-    log_config = yaml.safe_load(f)
-    logging.config.dictConfig(log_config)
+    if not os.path.exists(configfile_path):
+        raise ValueError(f"Falid to load logging settings from file {configfile_path}")
+
+    with open(configfile_path, "r") as f:
+        log_config = yaml.safe_load(f)
+        logging.config.dictConfig(log_config)
 
 
 def getLogger(name=None):

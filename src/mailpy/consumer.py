@@ -22,7 +22,7 @@ class BaseEventConsumer:
         if not self._thread.is_alive():
             self._running = True
             self._thread.start()
-            logger.info(f"Consumer {self} {self._thread.name} stating")
+            logger.info(f"Consumer {self} {self._thread.name} starting")
 
     def handle(self, obj):
         raise NotImplementedError("Parent should implement this method")
