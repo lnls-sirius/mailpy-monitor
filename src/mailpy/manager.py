@@ -63,7 +63,7 @@ class Manager:
         for c in self.consumers:
             c.add(obj)
 
-    def load_from_database(self):
+    def initialize_entries_from_database(self):
         """Load entries from database"""
         entries_data = self.db.get_entries()
         for entry_data in entries_data:

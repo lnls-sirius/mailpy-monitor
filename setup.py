@@ -46,7 +46,12 @@ setup(
     name="mailpy",
     author=__author__,
     author_email=__author_email__,
-    entry_points={"console_scripts": []},
+    entry_points={
+        "console_scripts": [
+            "mailpy=mailpy_run:start_alarm_server",
+            "mailpy-db=mailpy_run:start_test_database",
+        ],
+    },
     classifiers=[
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",

@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 import argparse
-import logging
-import logging.config
 
-import yaml
-
-import mailpy.manager
+import mailpy.logging as logging
 
 logger = logging.getLogger()
-if __name__ == "__main__":
-    with open("app/logging.yaml", "r") as f:
-        log_config = yaml.safe_load(f)
 
-    logging.config.dictConfig(log_config)
+
+def start_test_database():
+    import mailpy.utils
+
+    parser = argparse.ArgumentParser(
+        description="Start a dummy mongodb with some test data"
+    )
+    parser.parse_args()
+    container = mailpy.utils.MongoContainerManager()
+    container.start()
+
+
+def start_alarm_server():
+    import mailpy.manager
 
     parser = argparse.ArgumentParser(
         description="Monitor PV EPICS values and if any of them isn't in a specified range, "
@@ -55,6 +61,6 @@ if __name__ == "__main__":
             db_connection_string=args.db_url,
         )
     )
-    sms_app.load_from_database()
+    sms_app.initialize_entries_from_database()
     sms_app.start()
     sms_app.join()
