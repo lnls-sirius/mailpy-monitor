@@ -1,8 +1,14 @@
 import typing
 import unittest
 
-from app.db import DBManager, EntryData, GroupData, create_mongodb_url, make_db_manager
-from app.utils import MongoContainerManager, MongoJsonLoader
+from mailpy.db import (
+    DBManager,
+    EntryData,
+    GroupData,
+    create_mongodb_url,
+    make_db_manager,
+)
+from mailpy.utils import MongoContainerManager, MongoJsonLoader
 
 
 class TestDatabaseInteraction(unittest.TestCase):

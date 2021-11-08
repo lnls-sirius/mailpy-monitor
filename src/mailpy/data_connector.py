@@ -4,10 +4,10 @@ import typing
 
 import epics
 
-import app.db as db
-import app.entities as entities
-import app.helpers as helpers
-from app.entities.group import Group
+import mailpy.db as db
+import mailpy.entities as entities
+import mailpy.helpers as helpers
+from mailpy.entities.group import Group
 
 logger = logging.getLogger()
 

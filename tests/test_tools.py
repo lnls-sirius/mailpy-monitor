@@ -1,13 +1,19 @@
 import datetime
 import unittest
 
-from app.entities.timestamp import Timestamp
-from app.utils import MongoContainerManager
+from mailpy.entities.timestamp import Timestamp
+from mailpy.utils import MongoContainerManager, MongoJsonLoader
 
 
 class TestToolsMongodb(unittest.TestCase):
+    def test_load_json(self):
+        loader = MongoJsonLoader()
+        self.assertIsNotNone(loader.load_entries())
+        self.assertIsNotNone(loader.load_groups())
+
     def test_init_database(self):
         manager = MongoContainerManager()
+        self.assertIsNotNone(manager._volumes())
         manager.start()
 
         manager.start()

@@ -1,7 +1,7 @@
 version: 1
 formatters:
   simple:
-    format: "%(name)s (p %(process)d %(processName)s)(t %(thread)d: %(threadName)s) [%(levelname)s]: %(message)s"
+    format: "%(name)s (%(processName)s)(t %(thread)d: %(threadName)s) [%(levelname)s]: %(message)s"
 handlers:
   console:
     class: logging.StreamHandler

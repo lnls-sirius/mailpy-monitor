@@ -1,6 +1,6 @@
 import typing
 
-import app.entities as entities
+import mailpy.entities as entities
 
 
 class MessageContent(typing.NamedTuple):

@@ -5,10 +5,10 @@ import threading
 import time
 import typing
 
-import app.consumer as consumer
-import app.data_connector as data_connector
-import app.db as db
-import app.entities as entities
+import mailpy.consumer as consumer
+import mailpy.data_connector as data_connector
+import mailpy.db as db
+import mailpy.entities as entities
 
 logger = logging.getLogger()
 

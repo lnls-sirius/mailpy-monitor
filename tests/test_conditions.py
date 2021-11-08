@@ -1,6 +1,6 @@
 import unittest
 
-from app.entities.condition import (
+from mailpy.entities.condition import (
     Condition,
     ConditionEnums,
     ConditionException,

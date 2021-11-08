@@ -5,8 +5,7 @@ import logging.config
 
 import yaml
 
-import app
-from app.manager import Config
+import mailpy.manager
 
 logger = logging.getLogger()
 if __name__ == "__main__":
@@ -48,8 +47,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # SMS
-    sms_app = app.Manager(
-        config=Config(
+    sms_app = mailpy.manager.Manager(
+        config=mailpy.manager.Config(
             email_tls_enabled=args.tls,
             email_login=args.login,
             email_password=args.passwd,

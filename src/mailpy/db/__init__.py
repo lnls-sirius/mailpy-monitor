@@ -4,9 +4,9 @@ import typing
 import pymongo
 import pymongo.database
 
-from app.entities import ConditionEnums
-from app.entities.entry import EntryData
-from app.entities.group import GroupData
+from mailpy.entities import ConditionEnums
+from mailpy.entities.entry import EntryData
+from mailpy.entities.group import GroupData
 
 from .connector import DBConnector
 

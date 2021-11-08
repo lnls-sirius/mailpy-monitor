@@ -6,11 +6,9 @@ import typing
 import docker.client
 import docker.models.containers
 
-from app.db import EntryData, GroupData
+from mailpy.db import EntryData, GroupData
 
-RESOURCES_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "../resources"
-)
+RESOURCES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "./resources")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -25,6 +23,13 @@ class MongoContainerSettings:
     username: str = "test"
     password: str = "test"
     image: str = "mongo:4.4.3-bionic"
+
+
+def _join_path(*files):
+    path = os.path.join(*files)
+    if not os.path.exists(path):
+        raise ValueError(f"Path {path} does not exist")
+    return path
 
 
 class MongoContainerManager:
@@ -55,6 +60,22 @@ class MongoContainerManager:
         self._container = self.create_mongodb_container()
         self._container.start()
 
+    def _volumes(self):
+        return [
+            "{}:/docker-entrypoint-initdb.d/00-create-db-users.sh:ro".format(
+                _join_path(self.config.resources_path, "00-create-db-users.sh")
+            ),
+            "{}:/docker-entrypoint-initdb.d/01-create-collections.js:ro".format(
+                _join_path(self.config.resources_path, "01-create-collections.js")
+            ),
+            "{}:/docker-entrypoint-initdb.d/02-insert-data.sh:ro".format(
+                _join_path(self.config.resources_path, "02-insert-data.sh")
+            ),
+            "{}:/mailpy-db-init-data:ro".format(
+                _join_path(self.config.resources_path, "mailpy-db-2021-11-29")
+            ),
+        ]
+
     def create_mongodb_container(self) -> docker.models.containers.Container:
         if not self.check_image_exists(self.config.image):
             self.docker_client.images.pull(self.config.image)
@@ -70,12 +91,7 @@ class MongoContainerManager:
                 "MONGO_INITDB_USERNAME": self.config.username,
                 "MONGO_INITDB_PASSWORD": self.config.password,
             },
-            volumes=[
-                f"{self.config.resources_path}/00-create-db-users.sh:/docker-entrypoint-initdb.d/00-create-db-users.sh:ro",
-                f"{self.config.resources_path}/01-create-collections.js:/docker-entrypoint-initdb.d/01-create-collections.js:ro",
-                f"{self.config.resources_path}/02-insert-data.sh:/docker-entrypoint-initdb.d/02-insert-data.sh:ro",
-                f"{self.config.resources_path}/mailpy-db-2021-11-29:/mailpy-db-init-data:ro",
-            ],
+            volumes=self._volumes(),
             ports={"27017/tcp": (self.config.host, self.config.port)},
             detach=True,
         )
@@ -108,8 +124,8 @@ class MongoJsonLoader:
         if not dirname:
             dirname = dirname = os.path.join(RESOURCES_PATH, "mailpy-db-2021-11-29")
 
-        self.entries_filename = os.path.join(dirname, entries_filename)
-        self.groups_filename = os.path.join(dirname, groups_filename)
+        self.entries_filename = _join_path(dirname, entries_filename)
+        self.groups_filename = _join_path(dirname, groups_filename)
 
     def load_groups(self):
         with open(self.groups_filename, "r") as file:

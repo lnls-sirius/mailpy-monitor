@@ -1,3 +1,4 @@
+*.egg-info/*
 .coverage
 .idea/
 .vscode/.ropeproject
@@ -8,3 +9,4 @@ SMS_PASSWORD
 __pycache__/
 coverage.xml
 log/mailpy.log*
+src/mailpy.egg-info

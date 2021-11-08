@@ -2,8 +2,8 @@ import logging
 import queue
 import threading
 
-import app.entities as entities
-import app.mail as mail
+import mailpy.entities as entities
+import mailpy.mail as mail
 
 logger = logging.getLogger()
 
