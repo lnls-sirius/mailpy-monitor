@@ -32,7 +32,12 @@ class EpicsConnector:
             severity=kwargs.get("severity", None),
         )
         for entry in self._entries:
-            entry.handle_value_change(data)
+            try:
+                entry.handle_value_change(data)
+            except Exception as e:
+                logger.exception(
+                    f"Failed to dispatch event '{data}' for entry '{entry}', error {e}"
+                )
 
     def _dispatch_connection_changed_event(self, *_args, **kwargs):
         data = entities.ConnectionChangedInfo(

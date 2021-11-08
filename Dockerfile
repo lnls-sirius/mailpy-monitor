@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:4.10.3
+FROM continuumio/miniconda3:4.10.3 as mailpy
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=America/Sao_Paulo
@@ -27,3 +27,15 @@ RUN pip install -e . -v
 
 COPY scripts-dev/entrypoint.sh entrypoint.sh
 ENTRYPOINT /bin/bash entrypoint.sh
+
+
+FROM mongo:4.4.3-bionic as db
+
+ENV MONGO_INITDB_DATABASE=mailpy
+ENV MONGO_INITDB_ROOT_USERNAME=mailpy-admin
+ENV MONGO_INITDB_ROOT_PASSWORD=mailpy-admin
+ENV MONGO_INITDB_USERNAME=mailpy-user
+ENV MONGO_INITDB_PASSWORD=mailpy-user
+
+COPY ./src/mailpy/resources/00-create-db-users.sh    /docker-entrypoint-initdb.d/00-create-db-users.sh
+COPY ./src/mailpy/resources/01-create-collections.js /docker-entrypoint-initdb.d/01-create-collections.js

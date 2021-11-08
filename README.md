@@ -1,18 +1,32 @@
 # Mailpy
 
-
 [![codecov](https://codecov.io/gh/carneirofc/mailpy-monitor/branch/master/graph/badge.svg?token=DRM1BMIO9G)](https://codecov.io/gh/carneirofc/mailpy-monitor)
 
 [![Test and Coverage](https://github.com/carneirofc/mailpy-monitor/actions/workflows/tests.yml/badge.svg)](https://github.com/carneirofc/mailpy-monitor/actions/workflows/tests.yml)
 
 [![Lint](https://github.com/carneirofc/mailpy-monitor/actions/workflows/lint.yml/badge.svg)](https://github.com/carneirofc/mailpy-monitor/actions/workflows/lint.yml)
 
-Python app that monitors PVs EPICS, check their specified operation values and send an e-mail to a list of targets with a warning message if the PV value exceed its limits.
+Python app that monitors EPICS PVs, check their specified operation values and notify via e-mail.
 
-This code reads a list of EPICS PVs and their corresponding specified values
-from a MongoDB and monitor them. If any these PVs is not in it's specified
-value, an e-mail is sent with a warning message to one or a list of e-mail
-address.
+# Usage
+Clone the repository and install the sources using pip:
+```command
+pip install . -v
+```
+
+The command `mailpy` will start the alarm server, `mailpy --help` for further instructions.
+
+The utility command `mailpy-db` is available for testing purposes, it will setup a MongoDB container with dummy data.
+
+## Build
+The following scripts are used to build Docker images:
+```
+# Alarm server image
+scripts-dev/build.sh
+
+# Build mongodb image, with collection and user setup
+scripts-dev/build-db.sh
+```
 
 ## Tests & Coverage
 ```
@@ -29,11 +43,11 @@ docker run --interactive --tty -e MONGODB_URI="mongodb://test:test@localhost:270
 
 Environment varibles:
 
-| ENV         | Default                             | Desc                      |
-| ----------- | ----------------------------------- | ------------------------- |
-| MONGODB_URI | mongodb://localhost:27017/mailpy-db | MongoDB connection string |
+| ENV         | Desc                                                                           |
+| ----------- | ------------------------------------------------------------------------------ |
+| MONGODB_URI | mongodb://<login>:<password>@<host>:<port>/<db name> MongoDB connection string |
 
-Secrets:
+Secrets or Environment Variables:
 
 | Name                | Desc                             |
 | ------------------- | -------------------------------- |
@@ -49,42 +63,3 @@ Install **pre-commit** !
     - Signal SMS application to update the entries (Create/Update/Remove)
     - Support condition 'decreasing step' (similar to 'increasing step')
     - Consider creating an "user" collection (MongoDB)
-    - Consider removing the IOC, access only via the API
-
-## Usage
-
-### Include new entries
-
-One could use the rest API and the front-end or use `scripts/*.py`.
-
-Start an interactive python session at the project root:
-
-```python
-import app.utility
-
-app.utility.connect()
-
-# Create a single entry
-app.utility.create_entry(...)
-
-# Create entries from a csv file
-app.utility.load_csv_table("sms_table.csv")
-
-# Disconnect
-app.utility.disconnect()
-
-```
-
-### Syntax:
-
-    - separate e-mails with semicolon (";")
-        e.g.: "unknown.user@mail.com;another_user@aMail.com"
-    - separate specified value with colon (":")
-        e.g.:
-
-| Conditions      | Description | Syntax                |
-| --------------- | ----------- | --------------------- |
-| out of range    |             | "17:22"               |
-| increasing step |             | "1.0:1.5:2.0:2.5:3.0" |
-| superior than   |             | "42"                  |
-| inferior than   |             | "46"                  |
