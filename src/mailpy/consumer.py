@@ -1,8 +1,8 @@
-import logging
 import queue
 import threading
 
 import mailpy.entities as entities
+import mailpy.logging as logging
 import mailpy.mail as mail
 
 logger = logging.getLogger()

@@ -1,4 +1,3 @@
-import logging
 import queue
 import typing
 
@@ -7,6 +6,7 @@ import epics
 import mailpy.db as db
 import mailpy.entities as entities
 import mailpy.helpers as helpers
+import mailpy.logging as logging
 from mailpy.entities.group import Group
 
 logger = logging.getLogger()

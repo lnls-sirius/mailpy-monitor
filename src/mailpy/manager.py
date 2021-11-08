@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 import queue
 import threading
 import time
@@ -9,6 +8,7 @@ import mailpy.consumer as consumer
 import mailpy.data_connector as data_connector
 import mailpy.db as db
 import mailpy.entities as entities
+import mailpy.logging as logging
 
 logger = logging.getLogger()
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import logging
 import smtplib
 import typing
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import mailpy.entities as entities
+import mailpy.logging as logging
 
 from .message import compose_msg_content
 

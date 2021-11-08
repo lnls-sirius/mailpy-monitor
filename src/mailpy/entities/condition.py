@@ -1,5 +1,6 @@
-import logging
 import typing
+
+import mailpy.logging as logging
 
 from ..helpers.exceptions import EntryException
 

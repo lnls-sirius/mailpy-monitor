@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import logging
 import typing
 
 import pymongo
 import pymongo.collection
 import pymongo.database
+
+import mailpy.logging as logging
 
 logger = logging.getLogger()
 

@@ -1,8 +1,9 @@
-import logging
 import queue
 import threading
 import time
 import typing
+
+import mailpy.logging as logging
 
 from .condition import Condition, create_condition
 from .event import AlarmEvent, create_event

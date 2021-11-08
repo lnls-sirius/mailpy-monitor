@@ -1,9 +1,9 @@
-import logging
 import typing
 
 import pymongo
 import pymongo.database
 
+import mailpy.logging as logging
 from mailpy.entities import ConditionEnums
 from mailpy.entities.entry import EntryData
 from mailpy.entities.group import GroupData
