@@ -7,12 +7,14 @@
 
 [![Lint](https://github.com/carneirofc/mailpy-monitor/actions/workflows/lint.yml/badge.svg)](https://github.com/carneirofc/mailpy-monitor/actions/workflows/lint.yml)
 
-Python app that monitors PVs EPICS, check their specified operation values and send an e-mail to a list of targets with a warning message if the PV value exceed its limits.
+Python app that monitors EPICS PVs, check their specified operation values and notify via e-mail.
 
-This code reads a list of EPICS PVs and their corresponding specified values
-from a MongoDB and monitor them. If any these PVs is not in it's specified
-value, an e-mail is sent with a warning message to one or a list of e-mail
-address.
+
+## Build
+The followwing scripts are used to build Docker images:
+```
+scripts-dev/build-db.sh  scripts-dev/build.sh
+```
 
 ## Tests & Coverage
 ```
@@ -29,9 +31,9 @@ docker run --interactive --tty -e MONGODB_URI="mongodb://test:test@localhost:270
 
 Environment varibles:
 
-| ENV         | Default                             | Desc                      |
-| ----------- | ----------------------------------- | ------------------------- |
-| MONGODB_URI | mongodb://localhost:27017/mailpy-db | MongoDB connection string |
+| ENV         | Default                                              | Desc                      |
+| ----------- | ---------------------------------------------------- | ------------------------- |
+| MONGODB_URI | mongodb://<login>:<password>@<host>:<port>/<db name> | MongoDB connection string |
 
 Secrets:
 
@@ -50,30 +52,6 @@ Install **pre-commit** !
     - Support condition 'decreasing step' (similar to 'increasing step')
     - Consider creating an "user" collection (MongoDB)
     - Consider removing the IOC, access only via the API
-
-## Usage
-
-### Include new entries
-
-One could use the rest API and the front-end or use `scripts/*.py`.
-
-Start an interactive python session at the project root:
-
-```python
-import app.utility
-
-app.utility.connect()
-
-# Create a single entry
-app.utility.create_entry(...)
-
-# Create entries from a csv file
-app.utility.load_csv_table("sms_table.csv")
-
-# Disconnect
-app.utility.disconnect()
-
-```
 
 ### Syntax:
 
