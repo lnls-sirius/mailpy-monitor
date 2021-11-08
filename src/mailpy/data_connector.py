@@ -19,7 +19,9 @@ class EpicsConnector:
             connection_callback=self._dispatch_connection_changed_event,
             callback=self._dispatch_value_changed_event,
         )
-        self._entries: typing.List[entities.Entry] = []
+        if not self._pv.connected:
+            logger.warning(f"Epics PV {self._pv} is disconnected")
+        self._entries: typing.Set[entities.Entry] = set()
 
     def _dispatch_value_changed_event(self, *_args, **kwargs):
         data = entities.ValueChangedInfo(
@@ -49,7 +51,7 @@ class EpicsConnector:
         if self._has_entry(entry):
             return
 
-        self._entries.append(entry)
+        self._entries.add(entry)
 
     def tick(self):
         self._pv.run_callbacks()

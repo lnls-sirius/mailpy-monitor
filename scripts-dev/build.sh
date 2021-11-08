@@ -10,6 +10,8 @@ REPOSITORY=$(git remote show origin | grep Fetch | awk '{ print $3 }')
 TAG=carneirofc/mailpy-monitor:${COMMIT}-${DATE}
 
 sed -i "s|.*image:.*|    image: ${TAG}|g" scripts-dev/docker-compose.yml
+sed -i "s|__date__ = .*|__date__ = \"${BUILD_DATE_RFC339}\"|g" src/mailpy/info.py
+sed -i "s|__version__ = .*|__version__ = \"${COMMIT}\"|g" src/mailpy/info.py
 
 docker build \
 	--label "maintainer='${AUTHOR}'" \

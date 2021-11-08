@@ -256,7 +256,7 @@ class ConditionIncreasingStep(Condition):
         if level == self.max_level:
             return f"highest level ({level}), values greater than {self.step_values[level - 1]}"
 
-        return f"level ({level}), values between {self.step_values[level -1]}  and {self.step_values[level]}"
+        return f"level ({level}), values between {self.step_values[level -1]} and {self.step_values[level]}"
 
     def check_alarm(
         self, value: typing.Union[int, float]
@@ -266,8 +266,6 @@ class ConditionIncreasingStep(Condition):
             raise ConditionException(
                 f"Condition {self} requires a numeric input, received {type(value)}"
             )
-
-        # specified_value_message: typing.Optional[str] = None
 
         new_value_level = self.find_level_for_value(value)
         if new_value_level > self.step_level:
