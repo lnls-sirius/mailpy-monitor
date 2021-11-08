@@ -61,11 +61,6 @@ class EntryData(typing.NamedTuple):
 
 
 class Entry:
-    """
-    Encapsulates a PV and the email logic associated with it
-    :dummy bool: signal a dummy entry, used for tests and utility scripts.
-    """
-
     def __init__(
         self,
         group: Group,
@@ -187,15 +182,16 @@ class Entry:
         if data.value is None:
             return
 
-        try:
-            event = self.handle_condition(data.value)
-            if not event:
-                return
+        event = self.handle_condition(data.value)
+        if not event:
+            return
 
-            self.dispatch_alarm_event(event)
+        if data.pvname != self.pvname:
+            raise ValueError(
+                f"Cannot complete eveent handling, received valud changed event PV ({data}) differs from entry PV ({self})"
+            )
 
-        except Exception as e:
-            logger.exception(f"Unexpected exception when handling PV event '{e}'.")
+        self.dispatch_alarm_event(event)
 
     def dispatch_alarm_event(self, event: AlarmEvent):
         if not event:
