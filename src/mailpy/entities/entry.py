@@ -92,22 +92,6 @@ class Entry:
         self.last_event_time = time.time() - self.email_timeout
 
     @property
-    def value_callback_id(self):
-        return self._value_callback_id
-
-    @value_callback_id.setter
-    def value_callback_id(self, value_callback_id: int):
-        self._value_callback_id = value_callback_id
-
-    @property
-    def connection_callback_id(self):
-        return self._connection_callback_id
-
-    @connection_callback_id.setter
-    def connection_callback_id(self, connection_callback_id: int):
-        self._connection_callback_id = connection_callback_id
-
-    @property
     def pvname(self):
         return self._pvname
 
@@ -122,9 +106,6 @@ class Entry:
     @property
     def id(self):
         return self._id
-
-    def __str__(self):
-        return f'Entry({self.id},"{self.pvname}","{self.condition}",{self.group.name},"{self.alarm_values}",{self.emails}>'
 
     def handle_condition(self, value) -> typing.Optional[AlarmEvent]:
         """
@@ -208,3 +189,6 @@ class Entry:
             logger.exception(
                 f"Failed to put entry in queue {self} {event}. Queue is full, something wrong is happening..."
             )
+
+    def __str__(self):
+        return f'Entry({self.id},"{self.pvname}","{self.condition}",{self.group.name},"{self.alarm_values}",{self.emails}>'
