@@ -69,7 +69,6 @@ class DBManager:
 
     def initialize_conditions(self):
         """Initialize the conditions collection using the supported ones from commons.Condition"""
-        self.db.drop_collection(DBManager.CONDITIONS_COLLECTION)
         try:
             conditions: pymongo.collection.Collection = self.db[
                 DBManager.CONDITIONS_COLLECTION

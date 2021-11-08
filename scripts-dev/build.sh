@@ -7,11 +7,12 @@ BUILD_DATE_RFC339=$(date --rfc-3339=seconds)
 COMMIT=$(git rev-parse --short HEAD)
 DATE=$(date -I)
 REPOSITORY=$(git remote show origin | grep Fetch | awk '{ print $3 }')
-TAG=carneirofc/mailpy-monitor:${COMMIT}-${DATE}
 
-sed -i "s|.*image:.*|    image: ${TAG}|g" scripts-dev/docker-compose.yml
 sed -i "s|__date__ = .*|__date__ = \"${BUILD_DATE_RFC339}\"|g" src/mailpy/info.py
 sed -i "s|__version__ = .*|__version__ = \"${COMMIT}\"|g" src/mailpy/info.py
+
+TAG=carneirofc/mailpy-monitor:${COMMIT}-${DATE}
+sed -i "s|.*image:.*|    image: ${TAG}|g" scripts-dev/docker-compose.yml
 
 docker build \
 	--label "maintainer='${AUTHOR}'" \
@@ -24,5 +25,6 @@ docker build \
 	--label "org.opencontainers.image.version='${COMMIT}-${DATE}'" \
 	--label "org.opencontainers.image.description='EPICS Alarm Server'" \
 	--label "org.opencontainers.image.title='EPICS Alarm Server'" \
+    --target mailpy \
 	--tag ${TAG} \
 	.
