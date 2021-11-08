@@ -1,0 +1,10 @@
+version: "3.7"
+services:
+  mail:
+    image: carneirofc/mailpy-monitor:7bd919a-2021-11-08
+    build: .
+    network_mode: host
+    environment:
+      MONGODB_URI: mongodb://test:test@localhost:27017/mailpy
+      ALERT_MAIL_PASSWORD: email_password
+      ALERT_MAIL_LOGIN: email_

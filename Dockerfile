@@ -1,56 +1,29 @@
-FROM centos:7
-LABEL br.cnpem.maintainer="Claudio Carneiro <claudio.carneiro@cnpem.br>"
-LABEL br.cnpem.git="https://github.com/carneirofc/mailpy"
-USER root
+FROM continuumio/miniconda3:4.10.3
 
+ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=America/Sao_Paulo
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir -p /etc/yum/repos.d &&\
-    rpm --import https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc &&\
-    echo "[conda]" > /etc/yum/repos.d/conda.repo &&\
-    echo "name=Conda" >> /etc/yum/repos.d/conda.repo &&\
-    echo "baseurl=https://repo.anaconda.com/pkgs/misc/rpmrepo/conda" >> /etc/yum/repos.d/conda.repo &&\
-    echo "enabled=1" >> /etc/yum/repos.d/conda.repo &&\
-    echo "gpgcheck=1" >> /etc/yum/repos.d/conda.repo &&\
-    echo "gpgkey=https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc" >> /etc/yum/repos.d/conda.repo
+RUN set -ex; \
+    apt-get update &&\
+    apt-get install -y --fix-missing --no-install-recommends \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*  && \
+    dpkg-reconfigure --frontend noninteractive tzdata
 
-RUN yum install -y conda
+RUN conda install -c conda-forge pcaspy -y
 
-RUN groupadd --gid 1001 mailpy &&\
-    useradd --system \
-    --create-home \
-    --home-dir /home/mailpy \
-    --shell /bin/bash \
-    --uid 1001 \
-    --gid mailpy \
-    mailpy
+RUN mkdir -p -v /opt/mailpy/log
+WORKDIR /opt/mailpy
 
-RUN chown -R mailpy:mailpy /opt/conda
+COPY requirements.txt requirements.txt
 
-USER mailpy
-WORKDIR /home/mailpy
+RUN pip install -r requirements.txt
 
-RUN mkdir -p /home/mailpy/mailpy
+COPY scripts scripts
+COPY setup.py setup.py
+COPY src src
+RUN pip install -e . -v
 
-ADD requirements.txt /home/mailpy/mailpy/requirements.txt
-
-RUN /bin/bash -c \
-    "source /opt/conda/etc/profile.d/conda.sh && \
-    conda init &&\
-    conda activate &&\
-    conda install -y swig python=3.8.5 &&\
-    conda install -c conda-forge epics-base pcaspy &&\
-    pip install -r /home/mailpy/mailpy/requirements.txt"
-
-ADD . /home/mailpy/mailpy
-
-USER root
-RUN chown -R mailpy:mailpy /home/mailpy/mailpy
-USER mailpy
-
-WORKDIR /home/mailpy/mailpy
-
-ENV MONGODB_URI mongodb://localhost:27017/mailpy-db
-
+COPY scripts-dev/entrypoint.sh entrypoint.sh
 ENTRYPOINT /bin/bash entrypoint.sh

@@ -1,11 +1,29 @@
 # Mailpy
 
+
+[![codecov](https://codecov.io/gh/carneirofc/mailpy-monitor/branch/master/graph/badge.svg?token=DRM1BMIO9G)](https://codecov.io/gh/carneirofc/mailpy-monitor)
+
+[![Test and Coverage](https://github.com/carneirofc/mailpy-monitor/actions/workflows/tests.yml/badge.svg)](https://github.com/carneirofc/mailpy-monitor/actions/workflows/tests.yml)
+
+[![Lint](https://github.com/carneirofc/mailpy-monitor/actions/workflows/lint.yml/badge.svg)](https://github.com/carneirofc/mailpy-monitor/actions/workflows/lint.yml)
+
 Python app that monitors PVs EPICS, check their specified operation values and send an e-mail to a list of targets with a warning message if the PV value exceed its limits.
 
 This code reads a list of EPICS PVs and their corresponding specified values
 from a MongoDB and monitor them. If any these PVs is not in it's specified
 value, an e-mail is sent with a warning message to one or a list of e-mail
 address.
+
+## Tests & Coverage
+```
+coverage run -m unittest discover && coverage xml && coverage report
+```
+
+Manual testing deploy
+
+```
+docker run --interactive --tty -e MONGODB_URI="mongodb://test:test@localhost:27017/mailpy" -e ALERT_MAIL_PASSWORD="ASD" -e ALERT_MAIL_LOGIN="ASD"  docker.io/carneirofc/mailpy-mail:latest bash
+```
 
 ## Deploy
 

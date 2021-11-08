@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import argparse
-import os
-import sys
-import yaml
 import logging
 import logging.config
+import os
+import sys
+
+import yaml
 
 logger = logging.getLogger()
 
@@ -39,4 +40,3 @@ if __name__ == "__main__":
 
     # Disconnect
     logger.info("Operation finished")
-    app.utility.disconnect()
