@@ -2,3 +2,4 @@ coverage==6.1.1
 docker==5.0.3
 pre-commit
 pymongo-stubs==0.1.0
+types-PyYAML==5.4.10

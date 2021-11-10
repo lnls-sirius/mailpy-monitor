@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   mail:
-    image: carneirofc/mailpy-db:8cb4ca6-2021-11-08
+    image: carneirofc/mailpy-monitor:bb72c3a-2021-11-10
     build: .
     network_mode: host
     environment:

@@ -20,13 +20,18 @@ def start_test_database():
 
 
 def start_alarm_server():
-    import mailpy.manager
+    import os
 
-    logging.load_config("logging.yml")
+    import mailpy.manager
 
     parser = argparse.ArgumentParser(
         description="Monitor PV EPICS values and if any of them isn't in a specified range, "
         "email a warning message to a list of targets."
+    )
+    parser.add_argument(
+        "--logging-config",
+        help="yml config file for logging",
+        dest="logging_config",
     )
     parser.add_argument(
         "--tls",
@@ -55,6 +60,12 @@ def start_alarm_server():
     )
 
     args = parser.parse_args()
+    logging_config = args.logging_config
+    if not logging_config:
+        print(
+            f"logging_config '{logging_config}' setting is empty, using the default rotating file config"
+        )
+        logging.load_config_rotating_file()
 
     # SMS
     sms_app = mailpy.manager.Manager(
