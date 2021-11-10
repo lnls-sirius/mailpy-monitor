@@ -30,3 +30,5 @@ class TestTimestamps(unittest.TestCase):
         self.assertIsInstance(now.ts, datetime.datetime)
         self.assertIsInstance(now.utc_str, str)
         self.assertIsInstance(now.local_str, str)
+
+        self.assertNotEqual(Timestamp().ts, now.ts)

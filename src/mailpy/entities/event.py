@@ -17,7 +17,7 @@ class AlarmEvent:
     condition: str
     value_measured: str
 
-    ts: Timestamp = Timestamp()
+    ts: Timestamp
 
 
 def _value_to_string(value):
@@ -42,7 +42,7 @@ def create_event(
     emails: typing.List[str],
     condition: str,
     value_measured: typing.Any,
-):
+) -> AlarmEvent:
 
     return AlarmEvent(
         pvname=pvname,
@@ -53,4 +53,5 @@ def create_event(
         emails=_check_emails(emails),
         condition=condition,
         value_measured=_value_to_string(value_measured),
+        ts=Timestamp(),
     )
