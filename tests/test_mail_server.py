@@ -2,13 +2,13 @@ import smtplib
 import unittest
 
 from mailpy.entities.condition import ConditionEnums
-from mailpy.entities.event import AlarmEvent
+from mailpy.entities.event import create_event
 from mailpy.mail.client import MailClient
 from mailpy.mail.message import MessageContent, compose_msg_content
 
 
 class TestMailClient(unittest.TestCase):
-    event_fixture = AlarmEvent(
+    event_fixture = create_event(
         pvname="TEST:PV",
         specified_value_message="Out of range!!!",
         unit="U",
