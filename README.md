@@ -72,6 +72,13 @@ scripts-dev/build.sh
 scripts-dev/build-db.sh
 ```
 
+### Diagrams
+Class and Packages dependencies are listed as:
+
+![](docs/classes_mailpy.png)
+
+![](docs/packages_mailpy.png)
+
 ### Tests & Coverage
 ```
 coverage run -m unittest discover && coverage xml && coverage report
