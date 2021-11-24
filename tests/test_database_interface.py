@@ -8,6 +8,7 @@ from mailpy.db import (
     create_mongodb_url,
     make_db_manager,
 )
+from mailpy.entities.event import create_alarm_event
 from mailpy.utils import MongoContainerManager, MongoJsonLoader
 
 
@@ -54,6 +55,19 @@ class TestDatabaseInteraction(unittest.TestCase):
 
             for fixture in self.groups_fixture:
                 self.assertEqual(fixture, db.get_group(fixture.name))
+
+            e_data = {
+                "pvname": "str",
+                "specified_value_message": "str",
+                "unit": "str",
+                "warning": "str",
+                "subject": "str",
+                "emails": ["anEmail"],
+                "condition": "a condition",
+                "value_measured": "typing.Any",
+            }
+            event = create_alarm_event(**e_data)
+            db.persist_event(event)
 
     def tearDown(self):
         self.container.stop()

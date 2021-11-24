@@ -15,8 +15,12 @@ def start_test_database():
         description="Start a dummy mongodb with some test data"
     )
     parser.parse_args()
-    container = mailpy.utils.MongoContainerManager()
-    container.start()
+    m = mailpy.utils.MongoContainerManager()
+    print(f"Stating mongodb container based on {m.config.image}")
+    print(
+        f"connection string: 'mongodb://{m.config.username}:{m.config.password}@{m.config.host}:{m.config.port}/{m.config.database}'"
+    )
+    m.start()
 
 
 def start_alarm_server():

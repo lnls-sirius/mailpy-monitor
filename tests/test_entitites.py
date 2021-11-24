@@ -3,14 +3,14 @@ import unittest
 
 from mailpy.entities.condition import ConditionEnums
 from mailpy.entities.entry import AlarmEvent, Entry, EntryData, ValueChangedInfo
-from mailpy.entities.event import create_event
+from mailpy.entities.event import create_alarm_event
 from mailpy.entities.group import Group
 
 
 class TestEntry(unittest.TestCase):
     def test_alarm_event(self):
         with self.assertRaises(ValueError):
-            create_event(
+            create_alarm_event(
                 pvname="name",
                 condition="cond",
                 emails="",
@@ -20,7 +20,7 @@ class TestEntry(unittest.TestCase):
                 value_measured="",
                 warning="",
             )
-        e1 = create_event(
+        e1 = create_alarm_event(
             pvname="name",
             condition="cond",
             emails=[""],
@@ -30,7 +30,7 @@ class TestEntry(unittest.TestCase):
             value_measured="",
             warning="",
         )
-        e2 = create_event(
+        e2 = create_alarm_event(
             pvname="name",
             condition="cond",
             emails=[""],
