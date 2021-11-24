@@ -47,7 +47,7 @@ class Manager:
         )
 
         self.consumers: typing.List[consumer.BaseEventConsumer] = [
-            consumer.PersistenceConsumer(),
+            consumer.PersistenceConsumer(db_manager=self.db),
             consumer.EmailConsumer(
                 login=config.email_login,
                 passwd=config.email_password,
