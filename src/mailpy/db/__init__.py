@@ -1,11 +1,13 @@
 import typing
 
 import pymongo
+import pymongo.collection
 import pymongo.database
 
 import mailpy.logging as logging
 from mailpy.entities import ConditionEnums
 from mailpy.entities.entry import EntryData
+from mailpy.entities.event import Event
 from mailpy.entities.group import GroupData
 
 from .connector import DBConnector
@@ -17,6 +19,7 @@ class DBManager:
     CONDITIONS_COLLECTION = "conditions"
     GROUPS_COLLECTION = "groups"
     ENTRIES_COLLECTION = "entries"
+    EVENTS_COLLECTION = "events"
 
     def __init__(self, connector: DBConnector):
         self._connector: DBConnector = connector
@@ -66,6 +69,15 @@ class DBManager:
             DBManager.CONDITIONS_COLLECTION
         ]
         return conditions.find_one({"name": name})
+
+    def persist_event(self, event: Event):
+        events_collection: pymongo.collection.Collection = self.db[
+            DBManager.EVENTS_COLLECTION
+        ]
+        data = {**event.__dict__, "ts": event.ts.ts}
+        data["ts"] = event.ts.ts
+
+        events_collection.insert_one(data)
 
     def initialize_conditions(self):
         """Initialize the conditions collection using the supported ones from commons.Condition"""
