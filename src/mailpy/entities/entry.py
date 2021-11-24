@@ -6,7 +6,7 @@ import typing
 import mailpy.logging as logging
 
 from .condition import Condition, create_condition
-from .event import AlarmEvent, create_event
+from .event import AlarmEvent, create_alarm_event
 from .group import Group
 
 logger = logging.getLogger()
@@ -115,7 +115,7 @@ class Entry:
         if not cond_res:
             return None
 
-        return create_event(
+        return create_alarm_event(
             pvname=self.pvname,
             specified_value_message=cond_res.message,
             unit=self.unit,
