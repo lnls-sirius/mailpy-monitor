@@ -3,8 +3,9 @@ import threading
 
 import mailpy.entities as entities
 import mailpy.logging as logging
-import mailpy.mail as mail
 from mailpy.db import DBManager
+
+from .mail.client import MailClient, MailClientArgs
 
 logger = logging.getLogger()
 
@@ -45,10 +46,11 @@ class BaseEventConsumer:
 
 
 class EmailConsumer(BaseEventConsumer):
-    def __init__(self, login: str, passwd: str, tls: bool) -> None:
+    def __init__(self, mail_client_args: MailClientArgs) -> None:
         super().__init__(name="EmailConsumer")
-        self.mail_client = mail.MailClient(
-            login=login, passwd=passwd, tls=tls, debug_level=0
+        self.mail_client = MailClient(
+            args=mail_client_args,
+            debug_level=0,
         )
 
     def handle(self, obj):

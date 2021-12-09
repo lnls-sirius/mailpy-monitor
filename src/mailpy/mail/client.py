@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import dataclasses
 import smtplib
 import typing
 from email.mime.multipart import MIMEMultipart
@@ -27,6 +28,16 @@ class SMSException(Exception):
         super().__init__(*args)
 
 
+@dataclasses.dataclass
+class MailClientArgs:
+    login: str
+    passwd: str
+    port: int
+    host: str
+    tls: bool
+    debug_level: int = 0
+
+
 class MailClient:
     REQUIRED_FIELDS = [
         "_login",
@@ -37,19 +48,15 @@ class MailClient:
 
     def __init__(
         self,
-        login: str,
-        passwd: str,
-        port: int,
-        host: str,
-        tls: bool = False,
+        args: MailClientArgs,
         debug_level: int = 1,
     ):
 
-        self._login: str = login
-        self._passwd: str = passwd
-        self._tls: bool = tls
-        self._host: str = host
-        self._port: int = port
+        self._login: str = args.login
+        self._passwd: str = args.passwd
+        self._tls: bool = args.tls
+        self._host: str = args.host
+        self._port: int = args.port
 
         self._server: typing.Optional[smtplib.SMTP] = None
         self._debug_level = debug_level

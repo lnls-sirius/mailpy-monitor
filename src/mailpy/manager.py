@@ -9,6 +9,7 @@ import mailpy.data_connector as data_connector
 import mailpy.db as db
 import mailpy.entities as entities
 import mailpy.logging as logging
+from mailpy.mail.client import MailClientArgs
 
 logger = logging.getLogger()
 
@@ -51,9 +52,13 @@ class Manager:
         self.consumers: typing.List[consumer.BaseEventConsumer] = [
             consumer.PersistenceConsumer(db_manager=self.db),
             consumer.EmailConsumer(
-                login=config.email_login,
-                passwd=config.email_password,
-                tls=config.email_tls_enabled,
+                mail_client_args=MailClientArgs(
+                    port=config.email_server_port,
+                    host=config.email_server_host,
+                    login=config.email_login,
+                    passwd=config.email_password,
+                    tls=config.email_tls_enabled,
+                ),
             ),
         ]
 

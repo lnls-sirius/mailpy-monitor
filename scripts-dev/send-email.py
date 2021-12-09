@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from mailpy.entities.condition import ConditionEnums
 from mailpy.entities.event import create_alarm_event
-from mailpy.mail.client import MailClient, Settings
+from mailpy.mail.client import MailClient, MailClientArgs, Settings
 
 if __name__ == "__main__":
 
@@ -15,13 +15,12 @@ if __name__ == "__main__":
         value_measured="-100",
         condition=ConditionEnums.InferiorThan,
     )
-
-    with MailClient(
-        debug_level=2,
+    args = MailClientArgs(
         login="gas-noreply@cnpem.br",
         passwd="",
         host=Settings.CNPEM_HOSTNAME,
         port=Settings.CNPEM_TLS_PORT,
         tls=True,
-    ) as client:
+    )
+    with MailClient(debug_level=2, args=args) as client:
         client.send_email(event=event_fixture)

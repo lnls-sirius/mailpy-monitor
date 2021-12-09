@@ -3,7 +3,7 @@ import unittest
 
 from mailpy.entities.condition import ConditionEnums
 from mailpy.entities.event import create_alarm_event
-from mailpy.mail.client import MailClient, Settings
+from mailpy.mail.client import MailClient, MailClientArgs, Settings
 from mailpy.mail.message import MessageContent, compose_msg_content
 
 
@@ -27,25 +27,31 @@ class TestMailClient(unittest.TestCase):
 
     def test_client_tls(self):
         with self.assertRaises(ValueError):
-            with MailClient(
-                debug_level=2,
+            args = MailClientArgs(
                 login="rando",
                 passwd="some passwd",
                 tls=True,
                 host=Settings.GMAIL_HOSTNAME,
                 port=Settings.GMAIL_SSL_PORT,
+            )
+            with MailClient(
+                args=args,
+                debug_level=2,
             ) as client:
                 client.send_email(event=self.event_fixture)
 
     def test_client_ssl(self):
         with self.assertRaises(smtplib.SMTPAuthenticationError):
-            with MailClient(
-                debug_level=2,
+            args = MailClientArgs(
                 login="rando",
                 passwd="some passwd",
+                tls=False,
                 host=Settings.GMAIL_HOSTNAME,
                 port=Settings.GMAIL_SSL_PORT,
-                tls=False,
+            )
+            with MailClient(
+                args=args,
+                debug_level=2,
             ) as client:
                 client.send_email(event=self.event_fixture)
 
