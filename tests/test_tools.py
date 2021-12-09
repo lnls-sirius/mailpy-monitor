@@ -2,7 +2,7 @@ import datetime
 import unittest
 
 from mailpy.entities.timestamp import Timestamp
-from mailpy.utils import MongoContainerManager, MongoJsonLoader
+from mailpy.tools import MongoContainerManager, MongoJsonLoader
 
 
 class TestToolsMongodb(unittest.TestCase):
@@ -30,3 +30,5 @@ class TestTimestamps(unittest.TestCase):
         self.assertIsInstance(now.ts, datetime.datetime)
         self.assertIsInstance(now.utc_str, str)
         self.assertIsInstance(now.local_str, str)
+
+        self.assertNotEqual(Timestamp().ts, now.ts)

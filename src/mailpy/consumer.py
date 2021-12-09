@@ -3,7 +3,9 @@ import threading
 
 import mailpy.entities as entities
 import mailpy.logging as logging
-import mailpy.mail as mail
+from mailpy.db import DBManager
+
+from .mail.client import MailClient, MailClientArgs
 
 logger = logging.getLogger()
 
@@ -44,10 +46,11 @@ class BaseEventConsumer:
 
 
 class EmailConsumer(BaseEventConsumer):
-    def __init__(self, login: str, passwd: str, tls: bool) -> None:
+    def __init__(self, mail_client_args: MailClientArgs) -> None:
         super().__init__(name="EmailConsumer")
-        self.mail_client = mail.MailClient(
-            login=login, passwd=passwd, tls=tls, debug_level=0
+        self.mail_client = MailClient(
+            args=mail_client_args,
+            debug_level=0,
         )
 
     def handle(self, obj):
@@ -67,21 +70,20 @@ class EmailConsumer(BaseEventConsumer):
 
 
 class PersistenceConsumer(BaseEventConsumer):
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self, db_manager: DBManager) -> None:
         super().__init__(name="PersistenceConsumer")
+        self.db_manager = db_manager
 
     def handle(self, obj):
-        if type(obj) == entities.AlarmEvent:
+        if isinstance(obj, entities.Event):
             self.persist_event(obj)
         else:
             logger.error(
                 f"PersistenceConsumer received an unsupported event '{obj}', type {type(obj)}"
             )
 
-    def persist_event(self, event: entities.AlarmEvent):
+    def persist_event(self, event: entities.Event):
         try:
-            logger.info(f"@todo: Persist event {event} to database")
+            self.db_manager.persist_event(event=event)
         except Exception as e:
             logger.exception(f"Failed to persist event {event} to database. Error {e}")

@@ -20,7 +20,6 @@ COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-COPY scripts scripts
 COPY setup.py setup.py
 COPY src src
 RUN pip install -e . -v

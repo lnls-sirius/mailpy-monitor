@@ -33,4 +33,4 @@ class Timestamp:
         return self._ts
 
     def __str__(self):
-        return f"{self._ts}"
+        return f"Ts(utc={self.utc_str},local={self.local_str})"

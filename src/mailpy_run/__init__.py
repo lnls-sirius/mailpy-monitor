@@ -7,7 +7,7 @@ logger = logging.getLogger()
 
 
 def start_test_database():
-    import mailpy.utils
+    import mailpy.tools
 
     logging.load_config()
 
@@ -15,24 +15,55 @@ def start_test_database():
         description="Start a dummy mongodb with some test data"
     )
     parser.parse_args()
-    container = mailpy.utils.MongoContainerManager()
-    container.start()
+    m = mailpy.tools.MongoContainerManager()
+    print(f"Stating mongodb container based on {m.config.image}")
+    print(
+        f"connection string: 'mongodb://{m.config.username}:{m.config.password}@{m.config.host}:{m.config.port}/{m.config.database}'"
+    )
+    m.start()
 
 
 def start_alarm_server():
     import mailpy.manager
 
-    logging.load_config("logging.yml")
-
     parser = argparse.ArgumentParser(
         description="Monitor PV EPICS values and if any of them isn't in a specified range, "
         "email a warning message to a list of targets."
+    )
+    # --------- General Settings
+    parser.add_argument(
+        "--logging-config",
+        help="yml config file for logging",
+        dest="logging_config",
+    )
+    parser.add_argument(
+        "-db",
+        "--db_url",
+        metavar="mongodb://localhost:27017/mailpy",
+        default="mongodb://localhost:27017/mailpy",
+        help="MongoDB connection URL",
+    )
+    # --------- Mail Server Settings
+    parser.add_argument(
+        "--mail-server-port",
+        dest="email_server_port",
+        help="Email server port. eg: 25",
+        type=int,
+        required=True,
+    )
+    parser.add_argument(
+        "--mail-server-host",
+        dest="email_server_host",
+        help="Email server hostname or IP address. eg: 'smtp.gmail.com'",
+        type=str,
+        required=True,
     )
     parser.add_argument(
         "--tls",
         action="store_true",
         help="start an unsecured SMTP connection and encrypt it using .starttls() (default: use SMTP_SSL)",
     )
+    # --------- Mail Client Settings
     parser.add_argument(
         "--login",
         metavar="email@example.com",
@@ -46,19 +77,20 @@ def start_alarm_server():
         required=True,
         help="set the password used when trying to log in",
     )
-    parser.add_argument(
-        "-db",
-        "--db_url",
-        metavar="mongodb://localhost:27017/mailpy",
-        default="mongodb://localhost:27017/mailpy",
-        help="MongoDB connection URL",
-    )
 
     args = parser.parse_args()
+    logging_config = args.logging_config
+    if not logging_config:
+        print(
+            f"logging_config '{logging_config}' setting is empty, using the default rotating file config"
+        )
+        logging.load_config_rotating_file()
 
     # SMS
     sms_app = mailpy.manager.Manager(
         config=mailpy.manager.Config(
+            email_server_host=args.email_server_host,
+            email_server_port=args.email_server_port,
             email_tls_enabled=args.tls,
             email_login=args.login,
             email_password=args.passwd,

@@ -7,16 +7,14 @@
   "python.linting.banditEnabled": true,
   "python.testing.unittestEnabled": true,
   "python.sortImports.args": ["--profile", "black"],
+  "coverage-gutters.xmlname": "coverage.xml",
   "[python]": {
     "editor.insertSpaces": true,
     "editor.tabSize": 4
   },
-  "coverage-gutters.xmlname": "coverage.xml",
-
   "[shellscript]": {
     "files.eol": "\n",
     "editor.insertSpaces": true,
     "editor.tabSize": 4
-  },
-  "[python]": { "editor.insertSpaces": true, "editor.tabSize": 4 }
+  }
 }

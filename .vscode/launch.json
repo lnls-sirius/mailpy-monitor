@@ -5,7 +5,7 @@
       "name": "Deploy Alarm Server",
       "type": "python",
       "request": "launch",
-      "program": "run.py",
+      "program": "${workspaceFolder}/scripts-dev/start-mailpy.py",
       "console": "integratedTerminal",
       "args": [
         "-db",
