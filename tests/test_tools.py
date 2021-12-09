@@ -2,7 +2,7 @@ import datetime
 import unittest
 
 from mailpy.entities.timestamp import Timestamp
-from mailpy.utils import MongoContainerManager, MongoJsonLoader
+from mailpy.tools import MongoContainerManager, MongoJsonLoader
 
 
 class TestToolsMongodb(unittest.TestCase):

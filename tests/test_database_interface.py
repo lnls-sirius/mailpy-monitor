@@ -9,7 +9,7 @@ from mailpy.db import (
     make_db_manager,
 )
 from mailpy.entities.event import create_alarm_event
-from mailpy.utils import MongoContainerManager, MongoJsonLoader
+from mailpy.tools import MongoContainerManager, MongoJsonLoader
 
 
 class TestDatabaseInteraction(unittest.TestCase):

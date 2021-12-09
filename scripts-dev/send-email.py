@@ -3,7 +3,6 @@ from mailpy.entities.condition import ConditionEnums
 from mailpy.entities.event import create_alarm_event
 from mailpy.mail.client import MailClient, Settings
 
-
 if __name__ == "__main__":
 
     event_fixture = create_alarm_event(

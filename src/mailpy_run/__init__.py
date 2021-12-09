@@ -7,7 +7,7 @@ logger = logging.getLogger()
 
 
 def start_test_database():
-    import mailpy.utils
+    import mailpy.tools
 
     logging.load_config()
 
@@ -15,7 +15,7 @@ def start_test_database():
         description="Start a dummy mongodb with some test data"
     )
     parser.parse_args()
-    m = mailpy.utils.MongoContainerManager()
+    m = mailpy.tools.MongoContainerManager()
     print(f"Stating mongodb container based on {m.config.image}")
     print(
         f"connection string: 'mongodb://{m.config.username}:{m.config.password}@{m.config.host}:{m.config.port}/{m.config.database}'"
