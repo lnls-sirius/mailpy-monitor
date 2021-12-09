@@ -111,8 +111,11 @@ class MailClient:
 
     def _authenticate(self):
         self._create_server()
-        logger.info(f"Trying to authenticate at Gmail with {self._login}")
+        if not self._passwd:
+            logger.debug("Empty password ignoring login step")
+            return
 
+        logger.info(f"Trying to authenticate at Gmail with {self._login}")
         self._server.login(self._login, self._passwd)
         logger.info(f"logged successfully with {self._login}")
 
