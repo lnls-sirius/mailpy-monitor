@@ -3,7 +3,7 @@ import unittest
 
 from mailpy.entities.condition import ConditionEnums
 from mailpy.entities.event import create_alarm_event
-from mailpy.mail.client import MailClient
+from mailpy.mail.client import MailClient, Settings
 from mailpy.mail.message import MessageContent, compose_msg_content
 
 
@@ -32,7 +32,8 @@ class TestMailClient(unittest.TestCase):
                 login="rando",
                 passwd="some passwd",
                 tls=True,
-                host="smtp.gmail.com",
+                host=Settings.GMAIL_HOSTNAME,
+                port=Settings.GMAIL_SSL_PORT,
             ) as client:
                 client.send_email(event=self.event_fixture)
 
@@ -42,6 +43,8 @@ class TestMailClient(unittest.TestCase):
                 debug_level=2,
                 login="rando",
                 passwd="some passwd",
+                host=Settings.GMAIL_HOSTNAME,
+                port=Settings.GMAIL_SSL_PORT,
                 tls=False,
             ) as client:
                 client.send_email(event=self.event_fixture)

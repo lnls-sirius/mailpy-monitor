@@ -9,7 +9,9 @@
 Python app that monitors EPICS PVs, check their specified operation values and perform actions accordingly.
 
 ## Usage
+
 Clone the repository and install the sources using pip:
+
 ```command
 pip install . -v
 ```
@@ -28,19 +30,24 @@ pre-commit install
 ```
 
 Install the package using the interactive mode:
+
 ```bash
 pip install -e .
 ```
+
 **IMPORTANT** Check the directory `scripts-dev` for usefull commands!
 
 Stating a development **mongodb** server:
+
 ```python
 import mailpy.utils
 
 manager = mailpy.utils.MongoContainerManager()
 manager.start()
 ```
+
 This will start a **mongodb** container with the following settings:
+
 ```python
 name: str = "MONGODB_TEST_CONTAINER"
 port: int = 27017
@@ -52,6 +59,7 @@ username: str = "test"
 password: str = "test"
 image: str = "mongo:4.4.3-bionic"
 ```
+
 Use the connection string `mongodb://test:test@localhost:27017/mailpy`.
 
 The application can be started using the following script:
@@ -62,6 +70,7 @@ mailpy_run.start_alarm_server()
 ```
 
 ### Building Docker Containers
+
 The following scripts are used to build Docker images:
 
 ```bash
@@ -73,6 +82,7 @@ scripts-dev/build-db.sh
 ```
 
 ### Diagrams
+
 Class and Packages dependencies are listed as:
 
 ![](docs/classes_mailpy.png)
@@ -80,11 +90,13 @@ Class and Packages dependencies are listed as:
 ![](docs/packages_mailpy.png)
 
 ### Tests & Coverage
+
 ```
 coverage run -m unittest discover && coverage xml && coverage report
 ```
 
 One can start the mailpy container using on the terminal using the following command:
+
 ```bash
 docker run \
     --interactive \
@@ -94,15 +106,21 @@ docker run \
     -e ALERT_MAIL_LOGIN="ASD"  \
     docker.io/carneirofc/mailpy-mail:latest bash
 ```
+
 This assumes that a valid **mongodb** instance is already running.
 
 ## Deploy
 
 Environment varibles:
 
-| ENV         | Desc                                                                                |
-| ----------- | ----------------------------------------------------------------------------------- |
-| MONGODB_URI | mongodb://\<login>:\<password>@\<host>:\<port>/\<db name> MongoDB connection string |
+| ENV                  | Desc                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| MONGODB_URI          | mongodb://\<login>:\<password>@\<host>:\<port>/\<db name> MongoDB connection string |
+| MAIL_CLIENT_PASSWORD | email_password                                                                      |
+| MAIL_CLIENT_LOGIN    | email\_                                                                             |
+| MAIL_SERVER_TLS      | True_or_False                                                                       |
+| MAIL_SERVER_PORT     | mail_server_port\_                                                                  |
+| MAIL_SERVER_HOST     | mail_server_hostname_or_ip                                                          |
 
 Secrets or Environment Variables:
 
@@ -113,6 +131,8 @@ Secrets or Environment Variables:
 
 ## @todo
 
-    - Signal SMS application to update the entries (Create/Update/Remove)
-    - Support condition 'decreasing step' (similar to 'increasing step')
-    - Consider creating an "user" collection (MongoDB)
+```
+- Signal SMS application to update the entries (Create/Update/Remove)
+- Support condition 'decreasing step' (similar to 'increasing step')
+- Consider creating an "user" collection (MongoDB)
+```

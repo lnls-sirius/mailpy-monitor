@@ -20,6 +20,8 @@ class Config:
     db_connection_string: str
     email_login: str
     email_password: str
+    email_server_host: str
+    email_server_port: int
     email_tls_enabled: bool = False
 
 

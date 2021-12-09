@@ -11,6 +11,18 @@ from mailpy.db import EntryData, GroupData
 RESOURCES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "./resources")
 
 
+def check_required_fields(obj, fields: typing.List[str]):
+    if not fields:
+        return
+
+    missing = []
+    for field in fields:
+        if getattr(obj, field, None) is None:
+            missing.append(field)
+    if missing:
+        raise ValueError(f"Required fields '{missing}' are missing from object {obj}")
+
+
 @dataclasses.dataclass(frozen=True)
 class MongoContainerSettings:
     resources_path: str = RESOURCES_PATH

@@ -7,9 +7,19 @@ from email.mime.text import MIMEText
 import mailpy.entities as entities
 import mailpy.logging as logging
 
+from ..utils import check_required_fields
 from .message import compose_msg_content
 
 logger = logging.getLogger()
+
+
+class Settings:
+    GMAIL_TLS_PORT = 587
+    GMAIL_SSL_PORT = 465
+    GMAIL_HOSTNAME = "smtp.gmail.com"
+
+    CNPEM_TLS_PORT = 25
+    CNPEM_HOSTNAME = "mail.cnpem.br"
 
 
 class SMSException(Exception):
@@ -18,35 +28,50 @@ class SMSException(Exception):
 
 
 class MailClient:
-    DEFAULT_TLS_PORT = 587
-    DEFAULT_SSL_PORT = 465
+    REQUIRED_FIELDS = [
+        "_login",
+        "_passwd",
+        "_tls",
+        "_host",
+    ]
 
     def __init__(
         self,
         login: str,
         passwd: str,
-        debug_level: int = 1,
+        port: int,
+        host: str,
         tls: bool = False,
-        port: typing.Optional[int] = None,
-        host: typing.Optional[str] = None,
+        debug_level: int = 1,
     ):
-        self._login = login
-        self._passwd = passwd
-        self._tls = tls
-        self._host = "smtp.gmail.com" if host is None else host
 
-        if port is None:
-            self._port = self.DEFAULT_TLS_PORT if tls else self.DEFAULT_SSL_PORT
-        else:
-            self._port = port
+        self._login: str = login
+        self._passwd: str = passwd
+        self._tls: bool = tls
+        self._host: str = host
+        self._port: int = port
 
         self._server: typing.Optional[smtplib.SMTP] = None
         self._debug_level = debug_level
 
-        if self._tls and self._host == "smtp.gmail.com":
+        check_required_fields(self, self.REQUIRED_FIELDS)
+
+        self._check_edge_cases()
+
+    def _check_edge_cases(self):
+        if (
+            self._tls and self._host == Settings.GMAIL_HOSTNAME
+        ):  # edge cases, consider moving this ...
             raise ValueError(
                 f"tls is not supported for host '{self._host}' '{self._port}'"
             )
+        elif (
+            not self._tls
+            and self._host == Settings.CNPEM_HOSTNAME
+            or self._host == Settings.CNPEM_HOSTNAME
+            and self._port != Settings.CNPEM_TLS_PORT
+        ):
+            raise ValueError(f"CNPEM requires tls and port {Settings.CNPEM_TLS_PORT}")
 
     def __enter__(self):
         self._authenticate()
@@ -56,7 +81,6 @@ class MailClient:
         self._disconnect()
 
     def _create_server_tls(self):
-        self._port = self.DEFAULT_TLS_PORT
         self._server = smtplib.SMTP(self._host, timeout=10)
         response = self._server.connect(host=self._host, port=self._port)
         self._server.ehlo()
@@ -65,7 +89,6 @@ class MailClient:
         return response
 
     def _create_server_ssl(self):
-        self._port = self.DEFAULT_SSL_PORT
         self._server = smtplib.SMTP_SSL(self._host)
         return self._server.connect(host=self._host, port=self._port)
 
