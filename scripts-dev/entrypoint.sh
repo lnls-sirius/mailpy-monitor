@@ -7,7 +7,7 @@ set -exu
     [[ ${MAIL_SERVER_TLS} != "False" ]] && echo 'MAIL_SERVER_TLS requires True/False' && exit 1
 
 
-MAIL_TLS=$([[ ${MAIL_SERVER_TLS} == "True" ]] && echo "--tls")
+MAIL_TLS=$([[ ${MAIL_SERVER_TLS} == "True" ]] && echo "--tls" || echo "")
 
 
 # Load docker secrets
@@ -23,5 +23,5 @@ mailpy \
     --db_url "${MONGODB_URI}" \
     --mail-server-port ${MAIL_SERVER_PORT} \
     --mail-server-host ${MAIL_SERVER_HOST} \
-    ${MAIL_SERVER_TLS}
+    "${MAIL_TLS}"
 
