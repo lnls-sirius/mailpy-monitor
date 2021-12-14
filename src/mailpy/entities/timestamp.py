@@ -14,7 +14,7 @@ class Timestamp:
 
     @staticmethod
     def format_for_archiver(ts: datetime.datetime):
-        return ts.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+        return ts.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
     @staticmethod
     def format_for_readers(ts: datetime.datetime):
