@@ -136,3 +136,9 @@ Secrets or Environment Variables:
 - Support condition 'decreasing step' (similar to 'increasing step')
 - Consider creating an "user" collection (MongoDB)
 ```
+
+## docs\]
+
+```
+pyreverse --colorized -o png -p mailpy --all-ancestors src/mailpy --output-directory=./docs
+```
